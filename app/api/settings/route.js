@@ -11,10 +11,24 @@ const DEFAULT_SHIFT_TIMES = {
 
 export async function GET() {
     try {
+        const session = await getSession();
+        if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+
         await connectDB();
-        let setting = await Settings.findOne({ key: 'shiftTimes' });
+
+        // Determine which manager's settings to fetch
+        let managerId = null;
+        if (session.role === 'manager') managerId = session.userId;
+        else if (session.role === 'employee') {
+            const emp = await Employee.findById(session.employeeId).select('createdBy');
+            if (emp && emp.createdBy) managerId = emp.createdBy.toString();
+        }
+
+        const settingKey = managerId ? `shiftTimes_${managerId}` : 'shiftTimes';
+
+        let setting = await Settings.findOne({ key: settingKey });
         if (!setting) {
-            setting = await Settings.create({ key: 'shiftTimes', value: DEFAULT_SHIFT_TIMES });
+            setting = await Settings.create({ key: settingKey, value: DEFAULT_SHIFT_TIMES });
         }
         return Response.json(setting.value);
     } catch (err) {
@@ -32,8 +46,10 @@ export async function PATCH(req) {
         await connectDB();
         const { value } = await req.json();
 
+        const settingKey = session.role === 'manager' ? `shiftTimes_${session.userId}` : 'shiftTimes';
+
         await Settings.findOneAndUpdate(
-            { key: 'shiftTimes' },
+            { key: settingKey },
             { value, updatedAt: new Date() },
             { upsert: true }
         );

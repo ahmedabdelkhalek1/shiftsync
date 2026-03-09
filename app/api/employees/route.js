@@ -11,9 +11,24 @@ export async function GET() {
 
         await connectDB();
 
-        let employees = await Employee.find({ active: true }).lean();
+        let employees = [];
 
-        // Convert Map fields to plain objects for JSON serialization
+        if (session.role === 'super-admin') {
+            // Super-admins see all employees globally
+            employees = await Employee.find({ active: true }).lean();
+        } else if (session.role === 'manager') {
+            // Managers only see employees they created
+            employees = await Employee.find({ createdBy: session.userId, active: true }).lean();
+        } else if (session.role === 'employee') {
+            // Employees see their own row and colleagues managed by the same person
+            const self = await Employee.findById(session.employeeId);
+            if (self && self.createdBy) {
+                employees = await Employee.find({ createdBy: self.createdBy, active: true }).lean();
+            } else {
+                // Fallback: just self if org is missing
+                employees = self ? [self] : [];
+            }
+        }
         const serialized = employees.map(emp => ({
             ...emp,
             _id: emp._id.toString(),

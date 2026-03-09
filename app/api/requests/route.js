@@ -12,12 +12,21 @@ export async function GET() {
 
         let requests;
         if (session.role === 'employee') {
+            // Employees see only their own requests
             requests = await ShiftRequest.find({ employeeId: session.employeeId }).sort({ createdAt: -1 }).lean();
+        } else if (session.role === 'manager') {
+            // Managers see requests from employees they manage
+            // First, find all employees managed by this manager
+            const managedEmployees = await Employee.find({ createdBy: session.userId }).select('_id').lean();
+            const managedIds = managedEmployees.map(e => e._id);
+            // Then fetch requests belonging only to those IDs
+            requests = await ShiftRequest.find({ employeeId: { $in: managedIds } }).sort({ createdAt: -1 }).lean();
         } else {
+            // Super-admins see all requests
             requests = await ShiftRequest.find({}).sort({ createdAt: -1 }).lean();
         }
 
-        return Response.json({ requests: requests.map(r => ({ ...r, _id: r._id.toString(), employeeId: r.employeeId.toString() })) });
+        return Response.json({ requests: requests.map(r => ({ ...r, _id: r._id.toString(), employeeId: r.employeeId?.toString() })) });
     } catch (err) {
         return Response.json({ error: 'Server error' }, { status: 500 });
     }
