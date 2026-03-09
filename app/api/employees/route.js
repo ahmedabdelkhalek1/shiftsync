@@ -22,8 +22,8 @@ export async function GET() {
         const serialized = employees.map(emp => ({
             ...emp,
             _id: emp._id.toString(),
-            schedule: emp.schedule ? Object.fromEntries(emp.schedule) : {},
-            wfhDays: emp.wfhDays ? Object.fromEntries(emp.wfhDays) : {},
+            schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
+            wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {},
         }));
 
         return Response.json({ employees: serialized });
