@@ -247,11 +247,81 @@ body::before {
     accent-color: var(--brand-green);
 }
 
-.validation-status {
-    padding: 6px 14px;
+/* ─── Warning & Shuffle Controls Redesign ─── */
+.warning-settings {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.btn-pill-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-pill);
-    font-size: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
     font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    user-select: none;
+}
+
+.btn-pill-toggle:hover {
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+.btn-pill-toggle.active {
+    background: rgba(130, 170, 64, 0.1);
+    border-color: var(--brand-green);
+    color: var(--text-primary);
+}
+
+.btn-pill-toggle .check-icon {
+    width: 20px;
+    height: 20px;
+    background: var(--brand-green);
+    color: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+.btn-auto-shuffle {
+    background: var(--brand-red) !important;
+    color: white !important;
+    font-weight: 700 !important;
+    box-shadow: 0 4px 12px rgba(224, 8, 0, 0.3);
+    border: none !important;
+    transition: var(--transition) !important;
+}
+
+.btn-auto-shuffle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(224, 8, 0, 0.4);
+}
+
+.btn-warnings-pill {
+    background: rgba(224, 8, 0, 0.12) !important;
+    border: 1px solid rgba(224, 8, 0, 0.3) !important;
+    color: var(--brand-red-light) !important;
+    border-radius: var(--radius-pill) !important;
+    padding: 8px 18px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+.btn-warnings-pill:hover {
+    background: rgba(224, 8, 0, 0.2) !important;
 }
 
 .validation-status.valid {
@@ -486,6 +556,19 @@ body::before {
     z-index: 10;
     border-radius: var(--radius-sm);
     background: rgba(224, 8, 0, 0.15) !important;
+    box-shadow: 0 0 12px var(--brand-green);
+}
+
+.shift-cell.selected::after {
+    content: '✓';
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    color: var(--brand-green-light);
+    font-size: 14px;
+    font-weight: 800;
+    text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+    z-index: 11;
 }
 
 .shift-cell.selecting {

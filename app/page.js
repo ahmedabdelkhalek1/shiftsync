@@ -288,7 +288,7 @@ export default function Home() {
 
                             {['manager', 'super-admin'].includes(user?.role) && (
                                 <div className="settings-controls">
-                                    <button className="btn btn-secondary btn-sm" onClick={() => setShowShuffle(true)}>🔀 Smart Shuffle</button>
+                                    <button className="btn btn-auto-shuffle" onClick={() => setShowShuffle(true)}>🎲 Auto Shuffle</button>
                                     <BulkEditToolbar
                                         selectedCount={selectedCells.size}
                                         selectedShift={bulkShiftSelect}
@@ -296,13 +296,16 @@ export default function Home() {
                                         onApply={applyBulkEdit}
                                         onClear={() => setSelectedCells(new Set())}
                                     />
-                                    <div className="warning-settings" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-                                        <label style={{ display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
-                                            <input type="checkbox" checked={ignoreNightShift} onChange={e => setIgnoreNightShift(e.target.checked)} />
-                                            Ignore Night Shift Warning
-                                        </label>
-                                        <button className="btn btn-icon" onClick={() => setShowWarnings(true)} title="Show All Warnings" style={{ position: 'relative' }}>
-                                            ⚠️ {warnings.length > 0 && <span className="badge-dot" style={{ position: 'absolute', top: '-2px', right: '-2px', background: 'var(--brand-red)', border: '2px solid var(--bg-app)', borderRadius: '50%', width: '10px', height: '10px' }} />}
+                                    <div className="warning-settings">
+                                        <div
+                                            className={`btn-pill-toggle ${ignoreNightShift ? 'active' : ''}`}
+                                            onClick={() => handleIgnoreNightShift(!ignoreNightShift)}
+                                        >
+                                            <div className="check-icon">{ignoreNightShift ? '✓' : ''}</div>
+                                            Ignore Night Warnings
+                                        </div>
+                                        <button className="btn btn-warnings-pill" onClick={() => setShowWarnings(true)}>
+                                            ⚠️ {warnings.length} {warnings.length === 1 ? 'Warning' : 'Warnings'}
                                         </button>
                                     </div>
                                 </div>
