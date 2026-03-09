@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth, AuthGuard } from '@/components/AuthProvider';
-import { getVisibleDates, formatDate, isWeekend, isToday, getShortDayName, getMonthName } from '@/utils/dateUtils';
+import { getVisibleDates, formatDate, isWeekend, isToday, getShortDayName, getDayName, getMonthName } from '@/utils/dateUtils';
 import { useEmployees } from '@/hooks/useEmployees';
 
 import Navbar from '@/components/Navbar';
