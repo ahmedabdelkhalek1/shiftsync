@@ -583,10 +583,10 @@ body::before {
 }
 
 /* ─── Coverage badges uncovered alert ─── */
-/* ─── Coverage Badges Neon Glow ─── */
+/* ─── Coverage Badges Hollow Neon Glow ─── */
 .coverage-badges {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     align-items: center;
     justify-content: center;
 }
@@ -595,39 +595,61 @@ body::before {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     border-radius: 50%;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    color: white;
+    background: transparent !important;
 }
 
 .coverage-badge.morning {
-    background: var(--color-morning);
-    box-shadow: 0 0 8px var(--color-morning);
+    color: var(--color-morning);
+    border: 1px solid var(--color-morning);
+    box-shadow: 0 0 6px var(--color-morning), inset 0 0 4px var(--color-morning);
+    text-shadow: 0 0 4px var(--color-morning);
 }
 
 .coverage-badge.afternoon {
-    background: var(--color-afternoon);
-    box-shadow: 0 0 8px var(--color-afternoon);
+    color: var(--color-afternoon);
+    border: 1px solid var(--color-afternoon);
+    box-shadow: 0 0 6px var(--color-afternoon), inset 0 0 4px var(--color-afternoon);
+    text-shadow: 0 0 4px var(--color-afternoon);
 }
 
 .coverage-badge.evening {
-    background: var(--color-evening);
-    box-shadow: 0 0 8px var(--color-evening);
+    color: var(--color-evening);
+    border: 1px solid var(--color-evening);
+    box-shadow: 0 0 6px var(--color-evening), inset 0 0 4px var(--color-evening);
+    text-shadow: 0 0 4px var(--color-evening);
 }
 
 .coverage-badge.night {
-    background: var(--color-night);
-    box-shadow: 0 0 8px var(--color-night);
+    color: var(--color-night);
+    border: 1px solid var(--color-night);
+    box-shadow: 0 0 6px var(--color-night), inset 0 0 4px var(--color-night);
+    text-shadow: 0 0 4px var(--color-night);
 }
 
 .coverage-badge.uncovered {
-    background: var(--brand-red) !important;
-    color: #fff !important;
-    animation: pulse-alert 1.5s ease-in-out infinite;
-    box-shadow: 0 0 12px var(--brand-red) !important;
+    border: 1px solid var(--brand-red) !important;
+    color: var(--brand-red-light) !important;
+    animation: neon-pulse-alert 1.5s ease-in-out infinite;
+    box-shadow: 0 0 10px var(--brand-red), inset 0 0 6px var(--brand-red) !important;
+}
+
+@keyframes neon-pulse-alert {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
 }
 
 @keyframes pulse-alert {
@@ -1505,6 +1527,62 @@ body::before {
 .status-taken {
     background: rgba(224, 8, 0, 0.15);
     color: var(--brand-red-light);
+}
+
+/* ─── Legend Edit & Settings Modal ─── */
+.btn-edit-legend {
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    color: var(--brand-green-light) !important;
+    cursor: pointer;
+    font-size: 14px;
+    transition: var(--transition);
+    opacity: 0.6;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+.btn-edit-legend:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+    margin-top: 12px;
+}
+
+.settings-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.settings-field label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.settings-field input {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text-primary);
+    font-size: 14px;
+    transition: var(--transition);
+}
+
+.settings-field input:focus {
+    border-color: var(--brand-green);
+    outline: none;
+    background: var(--bg-hover);
 }
 
 /* ─── Shift Legend Footer ─── */

@@ -18,8 +18,8 @@ import WarningsModal from '@/components/WarningsModal';
 import BulkEditToolbar from '@/components/BulkEditToolbar';
 import ComboReasonModal from '@/components/ComboReasonModal';
 import ShuffleModal from '@/components/ShuffleModal';
-import MyRequestsModal from '@/components/MyRequestsModal';
 import MonthSummaryBar from '@/components/MonthSummaryBar';
+import SettingsModal from '@/components/SettingsModal';
 import { performSmartShuffle } from '@/utils/shuffleUtils';
 
 export default function Home() {
@@ -48,6 +48,13 @@ export default function Home() {
     const [showWarnings, setShowWarnings] = useState(false);
     const [loading, setLoading] = useState(false);
     const [showMyRequests, setShowMyRequests] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
+    const [shiftTimes, setShiftTimes] = useState({
+        morning: "7 AM – 3 PM",
+        afternoon: "11 AM – 7 PM",
+        evening: "3 PM – 11 PM",
+        night: "11 PM – 7 AM"
+    });
 
     // Persist ignoreNightShift in localStorage
     const [ignoreNightShift, setIgnoreNightShift] = useState(() => {
@@ -57,6 +64,20 @@ export default function Home() {
         setIgnoreNightShift(val);
         try { localStorage.setItem('ignoreNightShift', String(val)); } catch { }
     };
+
+    // Fetch shift times
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const res = await fetch('/api/settings');
+                if (res.ok) {
+                    const data = await res.json();
+                    setShiftTimes(data);
+                }
+            } catch (err) { console.error('Fetch settings error:', err); }
+        };
+        fetchSettings();
+    }, []);
 
     // Computed visible dates
     const visibleDates = useMemo(() => getVisibleDates(currentDate), [currentDate]);
@@ -368,12 +389,19 @@ export default function Home() {
                         </div>
 
                         <div className="shift-legend">
-                            <div className="shift-legend-title">Shift Times</div>
+                            <div className="shift-legend-title">
+                                Shift Times
+                                {(user?.role === 'manager' || user?.role === 'super-admin') && (
+                                    <button className="btn-edit-legend" onClick={() => setShowSettings(true)} title="Edit Shift Times">
+                                        ✏️
+                                    </button>
+                                )}
+                            </div>
                             <div className="shift-legend-items">
-                                <div className="legend-item"><div className="legend-dot morning" /> Morning: 7 AM – 3 PM</div>
-                                <div className="legend-item"><div className="legend-dot afternoon" /> Afternoon: 11 AM – 7 PM</div>
-                                <div className="legend-item"><div className="legend-dot evening" /> Evening: 3 PM – 11 PM</div>
-                                <div className="legend-item"><div className="legend-dot night" /> Night: 11 PM – 7 AM</div>
+                                <div className="legend-item"><div className="legend-dot morning" /> Morning: {shiftTimes.morning}</div>
+                                <div className="legend-item"><div className="legend-dot afternoon" /> Afternoon: {shiftTimes.afternoon}</div>
+                                <div className="legend-item"><div className="legend-dot evening" /> Evening: {shiftTimes.evening}</div>
+                                <div className="legend-item"><div className="legend-dot night" /> Night: {shiftTimes.night}</div>
                                 <div className="legend-item"><div className="legend-dot annual" /> Annual Leave</div>
                                 <div className="legend-item"><div className="legend-dot sick" /> Sick Leave</div>
                             </div>
@@ -388,6 +416,7 @@ export default function Home() {
                 {showProfile && selectedProfile && <ProfileModal employee={selectedProfile} onClose={() => setShowProfile(false)} onUpdate={refetchEmployees} />}
                 {showApprovals && <ApprovalsInbox onClose={() => setShowApprovals(false)} onUpdate={() => { refetchEmployees(); setPendingCount(Math.max(0, pendingCount - 1)); }} />}
                 {showWarnings && <WarningsModal warnings={warnings} onClose={() => setShowWarnings(false)} />}
+                {showSettings && <SettingsModal shiftTimes={shiftTimes} onClose={() => setShowSettings(false)} onUpdate={(newTimes) => setShiftTimes(newTimes)} />}
                 {requestTarget && <RequestChangeModal employee={requestTarget.employee} dateStr={requestTarget.date} currentShift={requestTarget.currentShift} onClose={() => setRequestTarget(null)} onSubmit={() => { refetchEmployees(); alert('Request submitted successfully'); }} />}
                 {comboTarget && <ComboReasonModal employee={comboTarget.employee} dateStr={comboTarget.date} shift={comboTarget.shift} onClose={() => setComboTarget(null)} onSubmit={refetchEmployees} />}
                 {showShuffle && <ShuffleModal employees={employees} onClose={() => setShowShuffle(false)} onShuffle={handleShuffle} />}
