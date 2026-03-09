@@ -586,7 +586,7 @@ body::before {
 /* ─── Coverage Badges Hollow Neon Glow ─── */
 .coverage-badges {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
     justify-content: center;
 }
@@ -595,47 +595,48 @@ body::before {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    font-size: 11px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 900;
     background: transparent !important;
+    transition: var(--transition);
 }
 
 .coverage-badge.morning {
-    color: var(--color-morning);
-    border: 1px solid var(--color-morning);
-    box-shadow: 0 0 6px var(--color-morning), inset 0 0 4px var(--color-morning);
-    text-shadow: 0 0 4px var(--color-morning);
+    color: var(--color-morning) !important;
+    border: 1.5px solid var(--color-morning);
+    box-shadow: 0 0 10px var(--color-morning), inset 0 0 5px var(--color-morning);
+    text-shadow: 0 0 5px var(--color-morning);
 }
 
 .coverage-badge.afternoon {
-    color: var(--color-afternoon);
-    border: 1px solid var(--color-afternoon);
-    box-shadow: 0 0 6px var(--color-afternoon), inset 0 0 4px var(--color-afternoon);
-    text-shadow: 0 0 4px var(--color-afternoon);
+    color: var(--color-afternoon) !important;
+    border: 1.5px solid var(--color-afternoon);
+    box-shadow: 0 0 10px var(--color-afternoon), inset 0 0 5px var(--color-afternoon);
+    text-shadow: 0 0 5px var(--color-afternoon);
 }
 
 .coverage-badge.evening {
-    color: var(--color-evening);
-    border: 1px solid var(--color-evening);
-    box-shadow: 0 0 6px var(--color-evening), inset 0 0 4px var(--color-evening);
-    text-shadow: 0 0 4px var(--color-evening);
+    color: var(--color-evening) !important;
+    border: 1.5px solid var(--color-evening);
+    box-shadow: 0 0 10px var(--color-evening), inset 0 0 5px var(--color-evening);
+    text-shadow: 0 0 5px var(--color-evening);
 }
 
 .coverage-badge.night {
-    color: var(--color-night);
-    border: 1px solid var(--color-night);
-    box-shadow: 0 0 6px var(--color-night), inset 0 0 4px var(--color-night);
-    text-shadow: 0 0 4px var(--color-night);
+    color: var(--color-night) !important;
+    border: 1.5px solid var(--color-night);
+    box-shadow: 0 0 10px var(--color-night), inset 0 0 5px var(--color-night);
+    text-shadow: 0 0 5px var(--color-night);
 }
 
 .coverage-badge.uncovered {
-    border: 1px solid var(--brand-red) !important;
-    color: var(--brand-red-light) !important;
+    border: 1.5px solid var(--brand-red) !important;
+    color: #ff8a80 !important;
     animation: neon-pulse-alert 1.5s ease-in-out infinite;
-    box-shadow: 0 0 10px var(--brand-red), inset 0 0 6px var(--brand-red) !important;
+    box-shadow: 0 0 12px var(--brand-red), inset 0 0 8px var(--brand-red) !important;
 }
 
 @keyframes neon-pulse-alert {
