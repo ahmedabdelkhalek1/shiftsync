@@ -20,6 +20,7 @@ import ComboReasonModal from '@/components/ComboReasonModal';
 import ShuffleModal from '@/components/ShuffleModal';
 import MonthSummaryBar from '@/components/MonthSummaryBar';
 import SettingsModal from '@/components/SettingsModal';
+import MyRequestsModal from '@/components/MyRequestsModal';
 import { performSmartShuffle } from '@/utils/shuffleUtils';
 
 export default function Home() {
