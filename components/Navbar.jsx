@@ -7,6 +7,7 @@ export default function Navbar({
     onViewDashboard,
     onAddEmployee,
     onShowApprovals,
+    onShowMyRequests,
     onSave,
     pendingCount = 0
 }) {
