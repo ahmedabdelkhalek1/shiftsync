@@ -366,6 +366,18 @@ export default function Home() {
                                 </table>
                             </div>
                         </div>
+
+                        <div className="shift-legend">
+                            <div className="shift-legend-title">Shift Times</div>
+                            <div className="shift-legend-items">
+                                <div className="legend-item"><div className="legend-dot morning" /> Morning: 7 AM – 3 PM</div>
+                                <div className="legend-item"><div className="legend-dot afternoon" /> Afternoon: 11 AM – 7 PM</div>
+                                <div className="legend-item"><div className="legend-dot evening" /> Evening: 3 PM – 11 PM</div>
+                                <div className="legend-item"><div className="legend-dot night" /> Night: 11 PM – 7 AM</div>
+                                <div className="legend-item"><div className="legend-dot annual" /> Annual Leave</div>
+                                <div className="legend-item"><div className="legend-dot sick" /> Sick Leave</div>
+                            </div>
+                        </div>
                     </>
                 ) : (
                     <Dashboard employees={employees} onOpenProfile={(emp) => { setSelectedProfile(emp); setShowProfile(true); }} onRemoveEmployee={removeEmployee} />

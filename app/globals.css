@@ -583,11 +583,51 @@ body::before {
 }
 
 /* ─── Coverage badges uncovered alert ─── */
+/* ─── Coverage Badges Neon Glow ─── */
+.coverage-badges {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+.coverage-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 800;
+    color: white;
+}
+
+.coverage-badge.morning {
+    background: var(--color-morning);
+    box-shadow: 0 0 8px var(--color-morning);
+}
+
+.coverage-badge.afternoon {
+    background: var(--color-afternoon);
+    box-shadow: 0 0 8px var(--color-afternoon);
+}
+
+.coverage-badge.evening {
+    background: var(--color-evening);
+    box-shadow: 0 0 8px var(--color-evening);
+}
+
+.coverage-badge.night {
+    background: var(--color-night);
+    box-shadow: 0 0 8px var(--color-night);
+}
+
 .coverage-badge.uncovered {
     background: var(--brand-red) !important;
     color: #fff !important;
     animation: pulse-alert 1.5s ease-in-out infinite;
-    box-shadow: 0 0 6px rgba(224, 8, 0, 0.6);
+    box-shadow: 0 0 12px var(--brand-red) !important;
 }
 
 @keyframes pulse-alert {
@@ -1465,6 +1505,78 @@ body::before {
 .status-taken {
     background: rgba(224, 8, 0, 0.15);
     color: var(--brand-red-light);
+}
+
+/* ─── Shift Legend Footer ─── */
+.shift-legend {
+    margin-top: 24px;
+    padding: 18px 24px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+}
+
+.shift-legend-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 16px;
+}
+
+.shift-legend-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: center;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-dot.morning {
+    background: var(--color-morning);
+    box-shadow: 0 0 8px var(--color-morning);
+}
+
+.legend-dot.afternoon {
+    background: var(--color-afternoon);
+    box-shadow: 0 0 8px var(--color-afternoon);
+}
+
+.legend-dot.evening {
+    background: var(--color-evening);
+    box-shadow: 0 0 8px var(--color-evening);
+}
+
+.legend-dot.night {
+    background: var(--color-night);
+    box-shadow: 0 0 8px var(--color-night);
+}
+
+.legend-dot.annual {
+    background: var(--color-annual-leave);
+    box-shadow: 0 0 8px var(--color-annual-leave);
+}
+
+.legend-dot.sick {
+    background: var(--color-sick-leave);
+    box-shadow: 0 0 8px var(--color-sick-leave);
 }
 
 /* ─── Mobile Responsiveness ─── */
