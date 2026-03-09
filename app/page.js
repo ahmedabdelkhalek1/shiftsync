@@ -44,6 +44,7 @@ export default function Home() {
     // Warnings & Settings
     const [warnings, setWarnings] = useState([]);
     const [showWarnings, setShowWarnings] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [ignoreNightShift, setIgnoreNightShift] = useState(false);
 
     // Computed visible dates
@@ -194,10 +195,12 @@ export default function Home() {
                     const isSelected = selectedCells.has(`${emp._id}|${id}`);
                     const isFav = emp.favoriteOffDays?.includes(getDayName(date));
 
+                    const isLastDayOfWeek = date.getDay() === 6; // Saturday = end of week
+
                     return (
                         <td
                             key={id}
-                            className={`shift-cell ${!isCurrentMonth ? 'locked-date' : ''} ${isSelected ? 'selected' : ''}`}
+                            className={`shift-cell ${!isCurrentMonth ? 'locked-date' : ''} ${isSelected ? 'selected' : ''} ${isLastDayOfWeek ? 'week-end' : ''}`}
                             style={{ position: 'relative' }}
                             onClick={(e) => {
                                 if (!isCurrentMonth) return;
@@ -280,12 +283,15 @@ export default function Home() {
                                     <thead>
                                         <tr>
                                             <th className="employee-header">Employee</th>
-                                            {visibleDates.map(({ date, isCurrentMonth, id }) => (
-                                                <th key={id} className={`day-header ${!isCurrentMonth ? 'locked-date' : ''} ${isWeekend(date) ? 'weekend' : ''} ${isToday(date) ? 'today' : ''}`}>
-                                                    {getShortDayName(date)}
-                                                    <span className="date-label">{date.getDate()}</span>
-                                                </th>
-                                            ))}
+                                            {visibleDates.map(({ date, isCurrentMonth, id }) => {
+                                                const isLastDayOfWeek = date.getDay() === 6;
+                                                return (
+                                                    <th key={id} className={`day-header ${!isCurrentMonth ? 'locked-date' : ''} ${isWeekend(date) ? 'weekend' : ''} ${isToday(date) ? 'today' : ''} ${isLastDayOfWeek ? 'week-end' : ''}`}>
+                                                        {getShortDayName(date)}
+                                                        <span className="date-label">{date.getDate()}</span>
+                                                    </th>
+                                                );
+                                            })}
                                             <th className="stats-header">Shifts</th>
                                             <th className="stats-header">Combos</th>
                                             <th className="stats-header">Nights</th>
@@ -294,6 +300,29 @@ export default function Home() {
                                     <tbody>
                                         {employees.map(renderEmployeeRow)}
                                     </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td className="coverage-label">COVERAGE</td>
+                                            {visibleDates.map(({ date, isCurrentMonth, id }) => {
+                                                const isLastDayOfWeek = date.getDay() === 6;
+                                                const m = employees.filter(e => e.schedule?.[id] === 'morning').length;
+                                                const a = employees.filter(e => e.schedule?.[id] === 'afternoon').length;
+                                                const e = employees.filter(e => e.schedule?.[id] === 'evening').length;
+                                                const n = employees.filter(e => e.schedule?.[id] === 'night').length;
+                                                return (
+                                                    <td key={id} className={`coverage-cell ${!isCurrentMonth ? 'locked-date' : ''} ${isLastDayOfWeek ? 'week-end' : ''}`}>
+                                                        <div className="coverage-badges">
+                                                            <span className="coverage-badge morning" title="Morning">{m}</span>
+                                                            <span className="coverage-badge afternoon" title="Afternoon">{a}</span>
+                                                            <span className="coverage-badge evening" title="Evening">{e}</span>
+                                                            <span className="coverage-badge night" title="Night">{n}</span>
+                                                        </div>
+                                                    </td>
+                                                );
+                                            })}
+                                            <td colSpan={3} className="coverage-cell" />
+                                        </tr>
+                                    </tfoot>
                                 </table>
                             </div>
                         </div>

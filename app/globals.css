@@ -492,6 +492,77 @@ body::before {
     background: rgba(224, 8, 0, 0.08);
 }
 
+/* ─── Week Separator ─── */
+.shift-cell.week-end,
+.day-header.week-end {
+    border-right: 2px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+/* ─── Coverage Footer Row ─── */
+.coverage-label {
+    padding: 6px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    vertical-align: middle;
+    white-space: nowrap;
+    background: var(--bg-surface);
+    position: sticky;
+    left: 0;
+    z-index: 2;
+}
+
+.coverage-cell {
+    background: var(--bg-surface);
+    padding: 4px 2px;
+    border-top: 1px solid var(--border-default);
+}
+
+.coverage-cell.week-end {
+    border-right: 2px solid rgba(255, 255, 255, 0.18) !important;
+}
+
+.coverage-badges {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+.coverage-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.coverage-badge.morning {
+    background: var(--color-morning);
+    color: #1a1a1a;
+}
+
+.coverage-badge.afternoon {
+    background: var(--color-afternoon);
+    color: #1a1a1a;
+}
+
+.coverage-badge.evening {
+    background: var(--color-evening);
+}
+
+.coverage-badge.night {
+    background: var(--color-night);
+}
+
 .shift-select {
     width: 100%;
     height: 100%;
