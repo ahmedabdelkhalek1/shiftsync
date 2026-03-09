@@ -217,7 +217,9 @@ export default function Home() {
             <tr key={emp._id}>
                 <td className="employee-cell">
                     <div className="employee-name" title={emp.name}>{emp.name}</div>
-                    <button className="btn btn-profile" onClick={() => { setSelectedProfile(emp); setShowProfile(true); }}>Profile</button>
+                    {(['manager', 'super-admin'].includes(user?.role) || user?.employeeId === emp._id) && (
+                        <button className="btn btn-profile" onClick={() => { setSelectedProfile(emp); setShowProfile(true); }}>Profile</button>
+                    )}
                 </td>
 
                 {/* Render day cells */}
