@@ -495,10 +495,95 @@ body::before {
 /* ─── Week Separator ─── */
 .shift-cell.week-end,
 .day-header.week-end {
-    border-right: 2px solid rgba(255, 255, 255, 0.18) !important;
+    border-right: 3px solid rgba(255, 255, 255, 0.35) !important;
+    padding-right: 2px;
 }
 
-/* ─── Coverage Footer Row ─── */
+/* ─── Coverage badges uncovered alert ─── */
+.coverage-badge.uncovered {
+    background: var(--brand-red) !important;
+    color: #fff !important;
+    animation: pulse-alert 1.5s ease-in-out infinite;
+    box-shadow: 0 0 6px rgba(224, 8, 0, 0.6);
+}
+
+@keyframes pulse-alert {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+}
+
+/* ─── Per-employee M/A/E/N Stat Columns ─── */
+.stat-badge-cell {
+    text-align: center;
+    vertical-align: middle;
+    padding: 4px 6px;
+    min-width: 36px;
+    border-left: 1px solid var(--border-subtle);
+}
+
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 22px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 4px;
+}
+
+.morning-badge {
+    background: rgba(255, 159, 67, 0.2);
+    color: var(--color-morning);
+}
+
+.afternoon-badge {
+    background: rgba(253, 203, 110, 0.2);
+    color: var(--color-afternoon);
+}
+
+.evening-badge {
+    background: rgba(74, 144, 217, 0.2);
+    color: var(--color-evening);
+}
+
+.night-badge {
+    background: rgba(123, 94, 167, 0.2);
+    color: var(--color-night);
+}
+
+.stats-header.morning-header {
+    color: var(--color-morning);
+    font-size: 11px;
+    min-width: 36px;
+}
+
+.stats-header.afternoon-header {
+    color: var(--color-afternoon);
+    font-size: 11px;
+    min-width: 36px;
+}
+
+.stats-header.evening-header {
+    color: var(--color-evening);
+    font-size: 11px;
+    min-width: 36px;
+}
+
+.stats-header.night-header {
+    color: var(--color-night);
+    font-size: 11px;
+    min-width: 36px;
+}
+
 .coverage-label {
     padding: 6px 8px;
     font-size: 10px;

@@ -226,10 +226,30 @@ export default function Home() {
                     );
                 })}
 
-                {/* Stats Columns */}
-                <td className="stats-cell">{Object.values(emp.schedule || {}).filter(s => ['morning', 'afternoon', 'evening', 'night'].includes(s)).length}</td>
-                <td className="stats-cell warning">{Object.values(emp.schedule || {}).filter(s => s === 'combo').length}</td>
-                <td className="stats-cell error">{Object.values(emp.schedule || {}).filter(s => s === 'night').length}</td>
+                {/* Stats Columns — per-employee M/A/E/N counts */}
+                {['manager', 'super-admin'].includes(user?.role) && (() => {
+                    const schedValues = Object.values(emp.schedule || {});
+                    const mCount = schedValues.filter(s => s === 'morning').length;
+                    const aCount = schedValues.filter(s => s === 'afternoon').length;
+                    const eCount = schedValues.filter(s => s === 'evening').length;
+                    const nCount = schedValues.filter(s => s === 'night').length;
+                    return (
+                        <>
+                            <td className="stat-badge-cell">
+                                <span className="stat-badge morning-badge">{mCount}</span>
+                            </td>
+                            <td className="stat-badge-cell">
+                                <span className="stat-badge afternoon-badge">{aCount}</span>
+                            </td>
+                            <td className="stat-badge-cell">
+                                <span className="stat-badge evening-badge">{eCount}</span>
+                            </td>
+                            <td className="stat-badge-cell">
+                                <span className="stat-badge night-badge">{nCount}</span>
+                            </td>
+                        </>
+                    );
+                })()}
             </tr>
         );
     };
@@ -292,9 +312,10 @@ export default function Home() {
                                                     </th>
                                                 );
                                             })}
-                                            <th className="stats-header">Shifts</th>
-                                            <th className="stats-header">Combos</th>
-                                            <th className="stats-header">Nights</th>
+                                            <th className="stats-header morning-header">M</th>
+                                            <th className="stats-header afternoon-header">A</th>
+                                            <th className="stats-header evening-header">E</th>
+                                            <th className="stats-header night-header">N</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -307,15 +328,15 @@ export default function Home() {
                                                 const isLastDayOfWeek = date.getDay() === 6;
                                                 const m = employees.filter(e => e.schedule?.[id] === 'morning').length;
                                                 const a = employees.filter(e => e.schedule?.[id] === 'afternoon').length;
-                                                const e = employees.filter(e => e.schedule?.[id] === 'evening').length;
+                                                const ev = employees.filter(e => e.schedule?.[id] === 'evening').length;
                                                 const n = employees.filter(e => e.schedule?.[id] === 'night').length;
                                                 return (
                                                     <td key={id} className={`coverage-cell ${!isCurrentMonth ? 'locked-date' : ''} ${isLastDayOfWeek ? 'week-end' : ''}`}>
                                                         <div className="coverage-badges">
-                                                            <span className="coverage-badge morning" title="Morning">{m}</span>
-                                                            <span className="coverage-badge afternoon" title="Afternoon">{a}</span>
-                                                            <span className="coverage-badge evening" title="Evening">{e}</span>
-                                                            <span className="coverage-badge night" title="Night">{n}</span>
+                                                            <span className={`coverage-badge morning ${m === 0 ? 'uncovered' : ''}`} title="Morning">{m}</span>
+                                                            <span className={`coverage-badge afternoon ${a === 0 ? 'uncovered' : ''}`} title="Afternoon">{a}</span>
+                                                            <span className={`coverage-badge evening ${ev === 0 ? 'uncovered' : ''}`} title="Evening">{ev}</span>
+                                                            <span className={`coverage-badge night ${n === 0 ? 'uncovered' : ''}`} title="Night">{n}</span>
                                                         </div>
                                                     </td>
                                                 );
