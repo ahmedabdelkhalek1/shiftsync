@@ -30,6 +30,6 @@ export async function GET() {
         });
     } catch (err) {
         console.error('Setup error:', err);
-        return Response.json({ error: 'Server error' }, { status: 500 });
+        return Response.json({ error: err.message || 'Server error' }, { status: 500 });
     }
 }
