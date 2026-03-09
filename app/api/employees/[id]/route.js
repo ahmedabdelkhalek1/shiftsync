@@ -23,8 +23,8 @@ export async function GET(req, { params }) {
             employee: {
                 ...emp,
                 _id: emp._id.toString(),
-                schedule: emp.schedule ? Object.fromEntries(emp.schedule) : {},
-                wfhDays: emp.wfhDays ? Object.fromEntries(emp.wfhDays) : {},
+                schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
+                wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {},
             }
         });
     } catch (err) {
@@ -60,7 +60,15 @@ export async function PUT(req, { params }) {
         }
 
         await emp.save();
-        return Response.json({ success: true, employee: { ...emp.toObject(), _id: emp._id.toString(), schedule: Object.fromEntries(emp.schedule), wfhDays: Object.fromEntries(emp.wfhDays) } });
+        return Response.json({
+            success: true,
+            employee: {
+                ...emp.toObject(),
+                _id: emp._id.toString(),
+                schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
+                wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {}
+            }
+        });
     } catch (err) {
         console.error('PUT employee error:', err);
         return Response.json({ error: 'Server error' }, { status: 500 });

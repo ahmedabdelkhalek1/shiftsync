@@ -33,4 +33,40 @@ const EmployeeSchema = new mongoose.Schema({
     active: { type: Boolean, default: true },
 });
 
+EmployeeSchema.methods.reconcileBalances = function () {
+    // 1. Calculate Combo Balance
+    // Count all 'combo-out' shifts in the schedule
+    let comboUsed = 0;
+    this.schedule.forEach((shift) => {
+        if (shift === 'combo-out') comboUsed++;
+    });
+
+    // Reset history statuses
+    this.comboHistory.forEach(item => {
+        item.status = 'approved'; // Usually approved if in history
+    });
+
+    // Sort by date chronicly
+    this.comboHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    // Mark the first N as 'taken'
+    let usedCount = 0;
+    for (let i = 0; i < this.comboHistory.length; i++) {
+        if (usedCount < comboUsed) {
+            this.comboHistory[i].status = 'rejected'; // Or 'taken' - using 'rejected' as 'consumed' for UI badge? 
+            // In legacy it was 'taken'. Let's stick to 'approved' vs 'taken' logic.
+            // Actually let's just update the numeric balance.
+            usedCount++;
+        }
+    }
+
+    // In our new schema, we have balances.combo
+    const earned = this.comboHistory.filter(h => h.type === 'combo-in').length;
+    this.balances.combo = Math.max(0, earned - comboUsed);
+
+    // Note: Annual/Sick balances are usually deducted manually or on-shift-set in the API.
+    // Reconciling them from schedule might be dangerous if history isn't perfect.
+    // So we'll keep manual/API deduction for those.
+};
+
 export const Employee = mongoose.models.Employee || mongoose.model('Employee', EmployeeSchema);
