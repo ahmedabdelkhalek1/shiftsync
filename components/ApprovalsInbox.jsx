@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
 
 export default function ApprovalsInbox({ onClose, onUpdate }) {
@@ -10,7 +10,7 @@ export default function ApprovalsInbox({ onClose, onUpdate }) {
     const [error, setError] = useState('');
 
     // Fetch pending requests on mount
-    useState(() => {
+    useEffect(() => {
         let active = true;
         fetch('/api/requests')
             .then(r => r.json())

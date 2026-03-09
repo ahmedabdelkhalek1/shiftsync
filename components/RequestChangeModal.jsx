@@ -1,5 +1,4 @@
-'use client';
-
+import { useState } from 'react';
 import { SHIFT_OPTIONS } from './ShiftCell';
 
 export default function RequestChangeModal({ employee, dateStr, currentShift, onClose, onSubmit }) {
