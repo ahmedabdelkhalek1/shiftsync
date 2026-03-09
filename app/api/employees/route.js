@@ -11,12 +11,7 @@ export async function GET() {
 
         await connectDB();
 
-        let employees;
-        if (session.role === 'employee') {
-            employees = await Employee.find({ _id: session.employeeId, active: true }).lean();
-        } else {
-            employees = await Employee.find({ active: true }).lean();
-        }
+        let employees = await Employee.find({ active: true }).lean();
 
         // Convert Map fields to plain objects for JSON serialization
         const serialized = employees.map(emp => ({
