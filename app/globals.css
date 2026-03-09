@@ -1465,9 +1465,31 @@ body::before {
         /* Better tap target */
     }
 
+    /* Enhance buttons for touch */
+    .btn {
+        padding: 8px 14px;
+        /* Better tap target */
+    }
+
     .shift-cell {
         min-width: 75px;
         /* Slightly narrower to fit more on screen but keep tap target */
+    }
+
+    /* Dashboard mobile adjustments */
+    .dashboard-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 20px;
+    }
+
+    .dashboard-container {
+        padding: 16px 12px !important;
+        min-width: max-content;
+    }
+
+    .dashboard-table {
+        min-width: max-content;
     }
 }
 

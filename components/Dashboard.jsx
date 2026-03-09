@@ -4,6 +4,11 @@ export default function Dashboard({ employees, onOpenProfile, onRemoveEmployee }
     const { user } = useAuth();
     const canEdit = user && ['manager', 'super-admin'].includes(user.role);
 
+    // Filter employees: Managers see all, employees see only themselves.
+    const displayEmployees = canEdit
+        ? employees
+        : employees.filter(emp => emp._id === user?.employeeId);
+
     return (
         <div className="dashboard-wrapper">
             <div className="dashboard-container" style={{ padding: '24px 32px' }}>
@@ -20,7 +25,7 @@ export default function Dashboard({ employees, onOpenProfile, onRemoveEmployee }
                         </tr>
                     </thead>
                     <tbody>
-                        {employees.map(emp => (
+                        {displayEmployees.map(emp => (
                             <tr key={emp._id}>
                                 <td style={{ fontWeight: 600 }}>{emp.name}</td>
                                 <td style={{ color: 'var(--text-secondary)' }}>{emp.role || 'Employee'}</td>
@@ -58,7 +63,7 @@ export default function Dashboard({ employees, onOpenProfile, onRemoveEmployee }
                                 )}
                             </tr>
                         ))}
-                        {employees.length === 0 && (
+                        {displayEmployees.length === 0 && (
                             <tr>
                                 <td colSpan={canEdit ? 7 : 6} style={{ textAlign: 'center', color: 'var(--text-muted)' }}>No employees found.</td>
                             </tr>
