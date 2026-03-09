@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '@/components/AuthProvider';
+import { useAuth, AuthGuard } from '@/components/AuthProvider';
 import { getVisibleDates, formatDate, isWeekend, isToday, getShortDayName, getMonthName } from '@/utils/dateUtils';
 import { useEmployees } from '@/hooks/useEmployees';
 
@@ -168,74 +168,74 @@ export default function Home() {
         );
     };
 
-    if (!user) return null;
-
     return (
-        <div className="app-container">
-            <Navbar
-                onViewSchedule={() => setView('schedule')}
-                onViewDashboard={() => setView('dashboard')}
-                onAddEmployee={() => setShowAddEmployee(true)}
-                onShowApprovals={() => setShowApprovals(true)}
-                pendingCount={pendingCount}
-            />
+        <AuthGuard>
+            <div className="app-container">
+                <Navbar
+                    onViewSchedule={() => setView('schedule')}
+                    onViewDashboard={() => setView('dashboard')}
+                    onAddEmployee={() => setShowAddEmployee(true)}
+                    onShowApprovals={() => setShowApprovals(true)}
+                    pendingCount={pendingCount}
+                />
 
-            {view === 'schedule' ? (
-                <>
-                    <div className="controls-panel">
-                        <div className="week-selector">
-                            <button onClick={() => changeMonth(-1)} className="btn btn-icon">← Prev</button>
-                            <span className="month-label">{getMonthName(currentDate)}</span>
-                            <button onClick={() => changeMonth(+1)} className="btn btn-icon">Next →</button>
-                        </div>
-
-                        {['manager', 'super-admin'].includes(user.role) && (
-                            <div className="settings-controls">
-                                <BulkEditToolbar
-                                    selectedCount={selectedCells.size}
-                                    selectedShift={bulkShiftSelect}
-                                    onShiftChange={setBulkShiftSelect}
-                                    onApply={applyBulkEdit}
-                                    onClear={() => setSelectedCells(new Set())}
-                                />
+                {view === 'schedule' ? (
+                    <>
+                        <div className="controls-panel">
+                            <div className="week-selector">
+                                <button onClick={() => changeMonth(-1)} className="btn btn-icon">← Prev</button>
+                                <span className="month-label">{getMonthName(currentDate)}</span>
+                                <button onClick={() => changeMonth(+1)} className="btn btn-icon">Next →</button>
                             </div>
-                        )}
-                    </div>
 
-                    <div className="schedule-wrapper">
-                        <div className="schedule-container">
-                            <table className="schedule-table">
-                                <thead>
-                                    <tr>
-                                        <th className="employee-header">Employee</th>
-                                        {visibleDates.map(({ date, isCurrentMonth, id }) => (
-                                            <th key={id} className={`day-header ${!isCurrentMonth ? 'locked-date' : ''} ${isWeekend(date) ? 'weekend' : ''} ${isToday(date) ? 'today' : ''}`}>
-                                                {getShortDayName(date)}
-                                                <span className="date-label">{date.getDate()}</span>
-                                            </th>
-                                        ))}
-                                        <th className="stats-header">Shifts</th>
-                                        <th className="stats-header">Combos</th>
-                                        <th className="stats-header">Nights</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {employees.map(renderEmployeeRow)}
-                                </tbody>
-                            </table>
+                            {['manager', 'super-admin'].includes(user?.role) && (
+                                <div className="settings-controls">
+                                    <BulkEditToolbar
+                                        selectedCount={selectedCells.size}
+                                        selectedShift={bulkShiftSelect}
+                                        onShiftChange={setBulkShiftSelect}
+                                        onApply={applyBulkEdit}
+                                        onClear={() => setSelectedCells(new Set())}
+                                    />
+                                </div>
+                            )}
                         </div>
-                    </div>
-                </>
-            ) : (
-                <Dashboard employees={employees} onOpenProfile={(emp) => { setSelectedProfile(emp); setShowProfile(true); }} onRemoveEmployee={removeEmployee} />
-            )}
 
-            {/* Modals Container */}
-            {showAddEmployee && <AddEmployeeModal onClose={() => setShowAddEmployee(false)} onEmployeeAdded={refetchEmployees} />}
-            {showProfile && selectedProfile && <ProfileModal employee={selectedProfile} onClose={() => setShowProfile(false)} onUpdate={refetchEmployees} />}
-            {showApprovals && <ApprovalsInbox onClose={() => setShowApprovals(false)} onUpdate={() => { refetchEmployees(); setPendingCount(Math.max(0, pendingCount - 1)); }} />}
-            {showWarnings && <WarningsModal warnings={warnings} onClose={() => setShowWarnings(false)} />}
-            {requestTarget && <RequestChangeModal employee={requestTarget.employee} dateStr={requestTarget.date} currentShift={requestTarget.currentShift} onClose={() => setRequestTarget(null)} onSubmit={() => { refetchEmployees(); alert('Request submitted successfully'); }} />}
-        </div>
+                        <div className="schedule-wrapper">
+                            <div className="schedule-container">
+                                <table className="schedule-table">
+                                    <thead>
+                                        <tr>
+                                            <th className="employee-header">Employee</th>
+                                            {visibleDates.map(({ date, isCurrentMonth, id }) => (
+                                                <th key={id} className={`day-header ${!isCurrentMonth ? 'locked-date' : ''} ${isWeekend(date) ? 'weekend' : ''} ${isToday(date) ? 'today' : ''}`}>
+                                                    {getShortDayName(date)}
+                                                    <span className="date-label">{date.getDate()}</span>
+                                                </th>
+                                            ))}
+                                            <th className="stats-header">Shifts</th>
+                                            <th className="stats-header">Combos</th>
+                                            <th className="stats-header">Nights</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {employees.map(renderEmployeeRow)}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <Dashboard employees={employees} onOpenProfile={(emp) => { setSelectedProfile(emp); setShowProfile(true); }} onRemoveEmployee={removeEmployee} />
+                )}
+
+                {/* Modals Container */}
+                {showAddEmployee && <AddEmployeeModal onClose={() => setShowAddEmployee(false)} onEmployeeAdded={refetchEmployees} />}
+                {showProfile && selectedProfile && <ProfileModal employee={selectedProfile} onClose={() => setShowProfile(false)} onUpdate={refetchEmployees} />}
+                {showApprovals && <ApprovalsInbox onClose={() => setShowApprovals(false)} onUpdate={() => { refetchEmployees(); setPendingCount(Math.max(0, pendingCount - 1)); }} />}
+                {showWarnings && <WarningsModal warnings={warnings} onClose={() => setShowWarnings(false)} />}
+                {requestTarget && <RequestChangeModal employee={requestTarget.employee} dateStr={requestTarget.date} currentShift={requestTarget.currentShift} onClose={() => setRequestTarget(null)} onSubmit={() => { refetchEmployees(); alert('Request submitted successfully'); }} />}
+            </div>
+        </AuthGuard>
     );
 }
