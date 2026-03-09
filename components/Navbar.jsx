@@ -36,18 +36,19 @@ export default function Navbar({
                         <button onClick={onViewDashboard} className="btn btn-secondary btn-sm" style={{ border: 'none' }}>📊 Dashboard</button>
                     </div>
 
-                    {['manager', 'super-admin'].includes(user.role) && (
+                    {['manager', 'super-admin'].includes(user.role) ? (
                         <>
                             <button
                                 onClick={onShowApprovals}
-                                className="btn btn-warning-indicator"
-                                style={{ marginRight: '8px', display: pendingCount > 0 ? 'inline-flex' : 'none' }}
+                                className={`btn ${pendingCount > 0 ? 'btn-warning-indicator' : 'btn-secondary'}`}
+                                style={{ marginRight: '8px' }}
                             >
                                 📬 Inbox <span style={{ marginLeft: '4px', fontWeight: 'bold' }}>{pendingCount}</span>
                             </button>
                             <button onClick={onAddEmployee} className="btn btn-primary">＋ Add Employee</button>
-                            <button onClick={onSave} className="btn btn-secondary" style={{ display: 'none' }}>💾 Save</button>
                         </>
+                    ) : (
+                        <button onClick={onShowMyRequests} className="btn btn-secondary">📋 My Requests</button>
                     )}
                 </div>
             </div>

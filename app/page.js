@@ -18,6 +18,8 @@ import WarningsModal from '@/components/WarningsModal';
 import BulkEditToolbar from '@/components/BulkEditToolbar';
 import ComboReasonModal from '@/components/ComboReasonModal';
 import ShuffleModal from '@/components/ShuffleModal';
+import MyRequestsModal from '@/components/MyRequestsModal';
+import MonthSummaryBar from '@/components/MonthSummaryBar';
 import { performSmartShuffle } from '@/utils/shuffleUtils';
 
 export default function Home() {
@@ -45,7 +47,16 @@ export default function Home() {
     const [warnings, setWarnings] = useState([]);
     const [showWarnings, setShowWarnings] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [ignoreNightShift, setIgnoreNightShift] = useState(false);
+    const [showMyRequests, setShowMyRequests] = useState(false);
+
+    // Persist ignoreNightShift in localStorage
+    const [ignoreNightShift, setIgnoreNightShift] = useState(() => {
+        try { return localStorage.getItem('ignoreNightShift') === 'true'; } catch { return false; }
+    });
+    const handleIgnoreNightShift = (val) => {
+        setIgnoreNightShift(val);
+        try { localStorage.setItem('ignoreNightShift', String(val)); } catch { }
+    };
 
     // Computed visible dates
     const visibleDates = useMemo(() => getVisibleDates(currentDate), [currentDate]);
@@ -262,6 +273,7 @@ export default function Home() {
                     onViewDashboard={() => setView('dashboard')}
                     onAddEmployee={() => setShowAddEmployee(true)}
                     onShowApprovals={() => setShowApprovals(true)}
+                    onShowMyRequests={() => setShowMyRequests(true)}
                     pendingCount={pendingCount}
                 />
 
@@ -296,6 +308,8 @@ export default function Home() {
                                 </div>
                             )}
                         </div>
+
+                        <MonthSummaryBar employees={employees} visibleDates={visibleDates} />
 
                         <div className="schedule-wrapper">
                             <div className="schedule-container">
@@ -336,7 +350,9 @@ export default function Home() {
                                                             <span className={`coverage-badge morning ${m === 0 ? 'uncovered' : ''}`} title="Morning">{m}</span>
                                                             <span className={`coverage-badge afternoon ${a === 0 ? 'uncovered' : ''}`} title="Afternoon">{a}</span>
                                                             <span className={`coverage-badge evening ${ev === 0 ? 'uncovered' : ''}`} title="Evening">{ev}</span>
-                                                            <span className={`coverage-badge night ${n === 0 ? 'uncovered' : ''}`} title="Night">{n}</span>
+                                                            {(!ignoreNightShift || n > 0) && (
+                                                                <span className={`coverage-badge night ${n === 0 && !ignoreNightShift ? 'uncovered' : ''}`} title="Night">{n}</span>
+                                                            )}
                                                         </div>
                                                     </td>
                                                 );
@@ -360,6 +376,7 @@ export default function Home() {
                 {requestTarget && <RequestChangeModal employee={requestTarget.employee} dateStr={requestTarget.date} currentShift={requestTarget.currentShift} onClose={() => setRequestTarget(null)} onSubmit={() => { refetchEmployees(); alert('Request submitted successfully'); }} />}
                 {comboTarget && <ComboReasonModal employee={comboTarget.employee} dateStr={comboTarget.date} shift={comboTarget.shift} onClose={() => setComboTarget(null)} onSubmit={refetchEmployees} />}
                 {showShuffle && <ShuffleModal employees={employees} onClose={() => setShowShuffle(false)} onShuffle={handleShuffle} />}
+                {showMyRequests && <MyRequestsModal onClose={() => setShowMyRequests(false)} />}
             </div>
         </AuthGuard>
     );
