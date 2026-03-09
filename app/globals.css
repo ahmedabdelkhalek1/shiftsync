@@ -485,6 +485,7 @@ body::before {
     outline-offset: -2px;
     z-index: 10;
     border-radius: var(--radius-sm);
+    background: rgba(224, 8, 0, 0.15) !important;
 }
 
 .shift-cell.selecting {

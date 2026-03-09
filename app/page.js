@@ -128,15 +128,25 @@ export default function Home() {
         });
 
         try {
-            await fetch('/api/shifts', {
+            const res = await fetch('/api/shifts', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ updates })
             });
-            refetchEmployees();
-            setSelectedCells(new Set());
-            setBulkShiftSelect('');
-        } catch { }
+
+            if (res.ok) {
+                await refetchEmployees();
+                setSelectedCells(new Set());
+                setBulkShiftSelect('');
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Bulk update failed');
+            }
+        } catch (err) {
+            alert('Network error during bulk update');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleShuffle = async ({ lockedIds, floaterIds, includeNight }) => {

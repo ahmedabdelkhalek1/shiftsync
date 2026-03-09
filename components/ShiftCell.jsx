@@ -63,8 +63,11 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, onShiftChange
                 <select
                     className={`shift-select ${currentShift}`}
                     value={currentShift}
-                    onChange={handleSelectChange}
-                    onClick={e => e.stopPropagation()}
+                    onChange={(e) => {
+                        e.stopPropagation();
+                        handleSelectChange(e);
+                    }}
+                    onClick={null} /* Allow bubble to td for selection */
                 >
                     {SHIFT_OPTIONS.map(op => (
                         <option key={op.value} value={op.value}>{op.label}</option>

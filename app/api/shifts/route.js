@@ -104,7 +104,7 @@ export async function PATCH(req) {
                 if (u.shift !== undefined) {
                     const prev = emp.schedule.get(u.dateStr) || 'off-day';
 
-                    // Logic parity with single update
+                    // Logic parity with single update (Leave Deduction)
                     if (u.shift === 'annual-leave' && prev !== 'annual-leave') {
                         if (emp.balances.annual > 0) emp.balances.annual--;
                     } else if (prev === 'annual-leave' && u.shift !== 'annual-leave') {
@@ -115,6 +115,30 @@ export async function PATCH(req) {
                         if (emp.balances.sick > 0) emp.balances.sick--;
                     } else if (prev === 'sick-leave' && u.shift !== 'sick-leave') {
                         emp.balances.sick++;
+                    }
+
+                    // Combo history recording (Logic parity with single update)
+                    const isEarningCombo = (u.shift === 'combo-in' && prev !== 'combo-in') ||
+                        (prev === 'vacation' && ['morning', 'afternoon', 'evening', 'night'].includes(u.shift));
+
+                    if (isEarningCombo) {
+                        emp.comboHistory.push({
+                            date: u.dateStr,
+                            originalShift: prev,
+                            newShift: u.shift,
+                            reason: 'Bulk Update',
+                            type: 'combo-in',
+                            status: 'approved'
+                        });
+                    } else if (u.shift === 'combo-out' && prev !== 'combo-out') {
+                        emp.comboHistory.push({
+                            date: u.dateStr,
+                            originalShift: prev,
+                            newShift: u.shift,
+                            reason: 'Bulk Assigned Off Day',
+                            type: 'combo-out',
+                            status: 'approved'
+                        });
                     }
 
                     emp.schedule.set(u.dateStr, u.shift);
