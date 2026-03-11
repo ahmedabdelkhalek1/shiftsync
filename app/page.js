@@ -261,13 +261,15 @@ export default function Home() {
                     );
                 })}
 
-                {/* Stats Columns — per-employee M/A/E/N counts */}
+                {/* Stats Columns — per-employee M/A/E/N counts (filtered by visible months) */}
                 {['manager', 'super-admin'].includes(user?.role) && (() => {
-                    const schedValues = Object.values(emp.schedule || {});
-                    const mCount = schedValues.filter(s => s === 'morning').length;
-                    const aCount = schedValues.filter(s => s === 'afternoon').length;
-                    const eCount = schedValues.filter(s => s === 'evening').length;
-                    const nCount = schedValues.filter(s => s === 'night').length;
+                    const monthDateIds = visibleDates.filter(d => d.isCurrentMonth).map(d => d.id);
+                    const currentMonthShifts = monthDateIds.map(id => emp.schedule?.[id]).filter(Boolean);
+                    
+                    const mCount = currentMonthShifts.filter(s => s === 'morning').length;
+                    const aCount = currentMonthShifts.filter(s => s === 'afternoon').length;
+                    const eCount = currentMonthShifts.filter(s => s === 'evening').length;
+                    const nCount = currentMonthShifts.filter(s => s === 'night').length;
                     return (
                         <>
                             <td className="stat-badge-cell">
