@@ -2,7 +2,8 @@ import { connectDB } from '@/lib/db';
 import { Employee } from '@/models/Employee';
 import { User } from '@/models/User';
 import { getSession } from '@/lib/auth';
-import { sendWelcomeEmail } from '@/lib/email';
+import { sendEmail } from '@/lib/gmail';
+import { welcomeEmailTemplate } from '@/lib/emailTemplates';
 
 export async function GET() {
     try {
@@ -14,21 +15,18 @@ export async function GET() {
         let employees = [];
 
         if (session.role === 'super-admin') {
-            // Super-admins see all employees globally
             employees = await Employee.find({ active: true }).lean();
         } else if (session.role === 'manager') {
-            // Managers only see employees they created
             employees = await Employee.find({ createdBy: session.userId, active: true }).lean();
         } else if (session.role === 'employee') {
-            // Employees see their own row and colleagues managed by the same person
             const self = await Employee.findById(session.employeeId);
             if (self && self.createdBy) {
                 employees = await Employee.find({ createdBy: self.createdBy, active: true }).lean();
             } else {
-                // Fallback: just self if org is missing
                 employees = self ? [self] : [];
             }
         }
+
         const serialized = employees.map(emp => ({
             ...emp,
             _id: emp._id.toString(),
@@ -74,17 +72,21 @@ export async function POST(req) {
         const passwordHash = await User.hashPassword(password);
         const user = await User.create({
             username: username.toLowerCase().trim(),
-            email: email || '',
+            email: email ? email.toLowerCase().trim() : '',
             passwordHash,
             role: 'employee',
             employeeId: employee._id,
             createdBy: session.userId,
         });
 
-        // Send welcome email if email provided
-        if (email) {
-            const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-            await sendWelcomeEmail(email, username, password, appUrl).catch(console.error);
+        // ── FEATURE 2: Send welcome email ────────────────────────
+        if (email && email.includes('@')) {
+            const html = welcomeEmailTemplate(name, username.toLowerCase().trim(), password);
+            sendEmail(
+                email,
+                'Welcome to ShiftSync — Your Account is Ready 🎉',
+                html
+            ).catch(err => console.error('[EMAIL] Welcome email failed:', err));
         }
 
         return Response.json({

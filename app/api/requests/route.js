@@ -1,7 +1,10 @@
 import { connectDB } from '@/lib/db';
 import { ShiftRequest } from '@/models/ShiftRequest';
 import { Employee } from '@/models/Employee';
+import { User } from '@/models/User';
 import { getSession } from '@/lib/auth';
+import { sendEmail } from '@/lib/gmail';
+import { changeRequestToManagerTemplate } from '@/lib/emailTemplates';
 
 export async function GET() {
     try {
@@ -12,17 +15,12 @@ export async function GET() {
 
         let requests;
         if (session.role === 'employee') {
-            // Employees see only their own requests
             requests = await ShiftRequest.find({ employeeId: session.employeeId }).sort({ createdAt: -1 }).lean();
         } else if (session.role === 'manager') {
-            // Managers see requests from employees they manage
-            // First, find all employees managed by this manager
             const managedEmployees = await Employee.find({ createdBy: session.userId }).select('_id').lean();
             const managedIds = managedEmployees.map(e => e._id);
-            // Then fetch requests belonging only to those IDs
             requests = await ShiftRequest.find({ employeeId: { $in: managedIds } }).sort({ createdAt: -1 }).lean();
         } else {
-            // Super-admins see all requests
             requests = await ShiftRequest.find({}).sort({ createdAt: -1 }).lean();
         }
 
@@ -58,6 +56,25 @@ export async function POST(req) {
             workingShift: workingShift || null,
             reason: reason || '',
         });
+
+        // ── FEATURE 4A: Notify the employee's manager ────────────
+        if (emp.createdBy) {
+            const managerUser = await User.findById(emp.createdBy).select('email').lean();
+            if (managerUser?.email && managerUser.email.includes('@')) {
+                const html = changeRequestToManagerTemplate(
+                    emp.name,
+                    date,
+                    currentShift,
+                    requestedShift,
+                    reason || ''
+                );
+                sendEmail(
+                    managerUser.email,
+                    `🔄 New Schedule Change Request from ${emp.name}`,
+                    html
+                ).catch(err => console.error('[EMAIL] Change request to manager failed:', err));
+            }
+        }
 
         return Response.json({ success: true, request: { ...request.toObject(), _id: request._id.toString() } });
     } catch (err) {

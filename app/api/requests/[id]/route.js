@@ -1,7 +1,10 @@
 import { connectDB } from '@/lib/db';
 import { ShiftRequest } from '@/models/ShiftRequest';
 import { Employee } from '@/models/Employee';
+import { User } from '@/models/User';
 import { getSession } from '@/lib/auth';
+import { sendEmail } from '@/lib/gmail';
+import { changeRequestApprovedTemplate, changeRequestRejectedTemplate } from '@/lib/emailTemplates';
 
 export async function PATCH(req, { params }) {
     try {
@@ -59,6 +62,25 @@ export async function PATCH(req, { params }) {
 
                 await emp.save();
             }
+        }
+
+        // ── FEATURE 4B: Notify the employee of the decision ─────
+        const empUser = await User.findOne({ employeeId: request.employeeId }).select('email').lean();
+        if (empUser?.email && empUser.email.includes('@')) {
+            const displayShift = request.requestedShift === 'combo-in'
+                ? (request.workingShift || 'morning')
+                : request.requestedShift;
+
+            const html = status === 'approved'
+                ? changeRequestApprovedTemplate(request.employeeName, request.date, displayShift)
+                : changeRequestRejectedTemplate(request.employeeName);
+
+            const subject = status === 'approved'
+                ? '✅ Your Schedule Change Was Approved'
+                : '❌ Your Schedule Change Was Not Approved';
+
+            sendEmail(empUser.email, subject, html)
+                .catch(err => console.error('[EMAIL] Request decision email failed:', err));
         }
 
         return Response.json({ success: true, status });

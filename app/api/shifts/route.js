@@ -1,9 +1,37 @@
 import { connectDB } from '@/lib/db';
 import { Employee } from '@/models/Employee';
+import { User } from '@/models/User';
 import { ShiftRequest } from '@/models/ShiftRequest';
 import { getSession } from '@/lib/auth';
+import { sendEmail } from '@/lib/gmail';
+import { schedulePublishedTemplate, scheduleUpdatedTemplate } from '@/lib/emailTemplates';
 
-// POST /api/shifts — set single shift (manager)
+// Helper: get name of a manager User by userId string
+async function getManagerName(managerId) {
+    try {
+        const mgr = await User.findById(managerId).select('username').lean();
+        return mgr?.username || 'Your Manager';
+    } catch {
+        return 'Your Manager';
+    }
+}
+
+// Helper: send emails to all employees of a manager (fire-and-forget)
+async function notifyAllEmployees(managerId, subject, htmlFn) {
+    const employees = await Employee.find({ createdBy: managerId, active: true }).select('_id').lean();
+    if (!employees.length) return;
+
+    const empIds = employees.map(e => e._id);
+    const users = await User.find({ employeeId: { $in: empIds }, active: true }).select('email').lean();
+
+    const sends = users
+        .filter(u => u.email && u.email.includes('@'))
+        .map(u => sendEmail(u.email, subject, htmlFn()));
+
+    await Promise.allSettled(sends);
+}
+
+// POST /api/shifts — set single shift (manager) → Feature 5: notify affected employee
 export async function POST(req) {
     try {
         const session = await getSession();
@@ -12,7 +40,6 @@ export async function POST(req) {
         await connectDB();
         const { employeeId, date, shift, wfh, reason } = await req.json();
 
-        // Employees cannot directly set shifts — they must submit requests
         if (session.role === 'employee') {
             return Response.json({ error: 'Employees must submit a shift request' }, { status: 403 });
         }
@@ -23,7 +50,6 @@ export async function POST(req) {
         const previousShift = emp.schedule.get(date) || 'off-day';
 
         if (shift !== undefined) {
-            // Leave Deduction Logic
             if (shift === 'annual-leave' && previousShift !== 'annual-leave') {
                 if (emp.balances.annual > 0) emp.balances.annual--;
             } else if (previousShift === 'annual-leave' && shift !== 'annual-leave') {
@@ -36,27 +62,18 @@ export async function POST(req) {
                 emp.balances.sick++;
             }
 
-            // Combo history recording
             const isEarningCombo = (shift === 'combo-in' && previousShift !== 'combo-in') ||
                 (previousShift === 'vacation' && ['morning', 'afternoon', 'evening', 'night'].includes(shift));
 
             if (isEarningCombo) {
                 emp.comboHistory.push({
-                    date: date,
-                    originalShift: previousShift,
-                    newShift: shift,
-                    reason: reason || 'Manual Update',
-                    type: 'combo-in',
-                    status: 'approved'
+                    date, originalShift: previousShift, newShift: shift,
+                    reason: reason || 'Manual Update', type: 'combo-in', status: 'approved'
                 });
             } else if (shift === 'combo-out' && previousShift !== 'combo-out') {
                 emp.comboHistory.push({
-                    date: date,
-                    originalShift: previousShift,
-                    newShift: shift,
-                    reason: reason || 'Assigned Off Day',
-                    type: 'combo-out',
-                    status: 'approved'
+                    date, originalShift: previousShift, newShift: shift,
+                    reason: reason || 'Assigned Off Day', type: 'combo-out', status: 'approved'
                 });
             }
 
@@ -65,10 +82,21 @@ export async function POST(req) {
 
         if (wfh !== undefined) emp.wfhDays.set(date, wfh);
 
-        // Reconcile Balances
         if (emp.reconcileBalances) emp.reconcileBalances();
-
         await emp.save();
+
+        // ── FEATURE 5: Notify employee that their schedule was updated ──
+        const empUser = await User.findOne({ employeeId: emp._id }).select('email').lean();
+        if (empUser?.email && empUser.email.includes('@')) {
+            const managerName = await getManagerName(session.userId);
+            const html = scheduleUpdatedTemplate(managerName);
+            sendEmail(
+                empUser.email,
+                '⚠️ Your Schedule Has Been Updated — Please Review',
+                html
+            ).catch(err => console.error('[EMAIL] Schedule update notification failed:', err));
+        }
+
         return Response.json({ success: true });
     } catch (err) {
         console.error('POST shift error:', err);
@@ -76,8 +104,7 @@ export async function POST(req) {
     }
 }
 
-// PATCH /api/shifts — bulk update multiple shifts (manager only)
-// Optimised to prevent VersionError by grouping updates by employee
+// PATCH /api/shifts — bulk update (manager) → Feature 3: schedule published email
 export async function PATCH(req) {
     try {
         const session = await getSession();
@@ -86,7 +113,8 @@ export async function PATCH(req) {
         }
 
         await connectDB();
-        const { updates } = await req.json(); // [{ employeeId, dateStr, shift, wfh }]
+        // publish flag + month/year are optional extras; updates is the main payload
+        const { updates, publish, month, year } = await req.json();
 
         // 1. Group updates by employee
         const grouped = updates.reduce((acc, upd) => {
@@ -104,7 +132,6 @@ export async function PATCH(req) {
                 if (u.shift !== undefined) {
                     const prev = emp.schedule.get(u.dateStr) || 'off-day';
 
-                    // Logic parity with single update (Leave Deduction)
                     if (u.shift === 'annual-leave' && prev !== 'annual-leave') {
                         if (emp.balances.annual > 0) emp.balances.annual--;
                     } else if (prev === 'annual-leave' && u.shift !== 'annual-leave') {
@@ -117,27 +144,18 @@ export async function PATCH(req) {
                         emp.balances.sick++;
                     }
 
-                    // Combo history recording (Logic parity with single update)
                     const isEarningCombo = (u.shift === 'combo-in' && prev !== 'combo-in') ||
                         (prev === 'vacation' && ['morning', 'afternoon', 'evening', 'night'].includes(u.shift));
 
                     if (isEarningCombo) {
                         emp.comboHistory.push({
-                            date: u.dateStr,
-                            originalShift: prev,
-                            newShift: u.shift,
-                            reason: 'Bulk Update',
-                            type: 'combo-in',
-                            status: 'approved'
+                            date: u.dateStr, originalShift: prev, newShift: u.shift,
+                            reason: 'Bulk Update', type: 'combo-in', status: 'approved'
                         });
                     } else if (u.shift === 'combo-out' && prev !== 'combo-out') {
                         emp.comboHistory.push({
-                            date: u.dateStr,
-                            originalShift: prev,
-                            newShift: u.shift,
-                            reason: 'Bulk Assigned Off Day',
-                            type: 'combo-out',
-                            status: 'approved'
+                            date: u.dateStr, originalShift: prev, newShift: u.shift,
+                            reason: 'Bulk Assigned Off Day', type: 'combo-out', status: 'approved'
                         });
                     }
 
@@ -148,6 +166,16 @@ export async function PATCH(req) {
 
             if (emp.reconcileBalances) emp.reconcileBalances();
             await emp.save();
+        }
+
+        // ── FEATURE 3: If this is a publish action, email all employees ──
+        if (publish && month && year) {
+            const managerName = await getManagerName(session.userId);
+            notifyAllEmployees(
+                session.userId,
+                `📅 New Schedule Published — ${month} ${year}`,
+                () => schedulePublishedTemplate(managerName, month, year)
+            ).catch(err => console.error('[EMAIL] Schedule published notification failed:', err));
         }
 
         return Response.json({ success: true });

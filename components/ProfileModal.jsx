@@ -15,6 +15,7 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
         wfh: employee.balances?.wfh || 0,
     });
     const [gender, setGender] = useState(employee.gender || 'male');
+    const [email, setEmail] = useState(employee.email || '');
 
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -44,9 +45,11 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
         try {
             const payload = { favoriteOffDays };
 
+            // Managers can edit email as well
             if (canEditBalances) {
                 payload.balances = balances;
                 payload.gender = gender;
+                payload.email = email;
             }
 
             const res = await fetch(`/api/employees/${employee._id}`, {
@@ -115,9 +118,28 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
                     </div>
                 </div>
 
-                {canEditBalances && (
-                    <div className="profile-section">
-                        <h3>Personal Info</h3>
+                <div className="profile-section">
+                    <h3>Personal Info</h3>
+                    
+                    <div style={{ marginBottom: '16px' }}>
+                        <label style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '4px', display: 'block' }}>Email Address</label>
+                        {canEditBalances ? (
+                            <input 
+                                type="email" 
+                                className="input-field" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)} 
+                                placeholder="Employee email address..." 
+                                disabled={loading} 
+                            />
+                        ) : (
+                            <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid var(--border-subtle)', color: email ? '#fff' : '#666' }}>
+                                {email || 'No email provided'}
+                            </div>
+                        )}
+                    </div>
+
+                    {canEditBalances && (
                         <div className="gender-selection profile-gender-edit" style={{ marginBottom: 0 }}>
                             <label>Gender</label>
                             <label className="radio-label">
@@ -127,8 +149,8 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
                                 <input type="radio" value="female" checked={gender === 'female'} onChange={() => setGender('female')} /> Female
                             </label>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
 
                 {employee.comboHistory && employee.comboHistory.length > 0 && (
                     <div className="profile-section">

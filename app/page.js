@@ -183,6 +183,32 @@ export default function Home() {
         }
     };
 
+    const publishSchedule = async () => {
+        const monthYear = getMonthName(currentDate);
+        if (!window.confirm(`Are you sure you want to publish the schedule for ${monthYear}? This will email all your employees.`)) return;
+        
+        setLoading(true);
+        try {
+            const [month, year] = monthYear.split(' ');
+            const res = await fetch('/api/shifts', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ updates: [], publish: true, month, year })
+            });
+
+            if (res.ok) {
+                alert(`Schedule for ${monthYear} published successfully! Emails have been sent.`);
+            } else {
+                const data = await res.json();
+                alert(data.error || 'Publish failed');
+            }
+        } catch (err) {
+            alert('Network error during publish');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleShuffle = async ({ lockedIds, floaterIds, includeNight }) => {
         const updates = performSmartShuffle({ employees, visibleDates, lockedIds, floaterIds, includeNight });
 
@@ -314,6 +340,9 @@ export default function Home() {
 
                             {['manager', 'super-admin'].includes(user?.role) && (
                                 <div className="settings-controls">
+                                    <button className="btn btn-primary" onClick={publishSchedule} disabled={loading} style={{ background: 'var(--brand-red)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', fontWeight: 'bold' }}>
+                                        {loading ? 'Publishing...' : '📢 Publish Schedule'}
+                                    </button>
                                     <button className="btn btn-auto-shuffle" onClick={() => setShowShuffle(true)}>🎲 Auto Shuffle</button>
                                     <BulkEditToolbar
                                         selectedCount={selectedCells.size}

@@ -19,10 +19,14 @@ export async function GET(req, { params }) {
         const emp = await Employee.findOne({ _id: id, active: true }).lean();
         if (!emp) return Response.json({ error: 'Employee not found' }, { status: 404 });
 
+        // Fetch associated User to get the email
+        const userDoc = await User.findOne({ employeeId: id }).select('email').lean();
+
         return Response.json({
             employee: {
                 ...emp,
                 _id: emp._id.toString(),
+                email: userDoc?.email || '',
                 schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
                 wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {},
             }
@@ -57,14 +61,22 @@ export async function PUT(req, { params }) {
             if (body.balances !== undefined) emp.balances = { ...emp.balances.toObject(), ...body.balances };
             if (body.comboHistory !== undefined) emp.comboHistory = body.comboHistory;
             if (body.ignoredWarnings !== undefined) emp.ignoredWarnings = body.ignoredWarnings;
+            
+            // Managers can update the email on the User model
+            if (body.email !== undefined) {
+                await User.findOneAndUpdate({ employeeId: id }, { email: body.email.toLowerCase().trim() });
+            }
         }
 
         await emp.save();
+        const updatedUser = await User.findOne({ employeeId: id }).select('email').lean();
+        
         return Response.json({
             success: true,
             employee: {
                 ...emp.toObject(),
                 _id: emp._id.toString(),
+                email: updatedUser?.email || '',
                 schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
                 wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {}
             }
