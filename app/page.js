@@ -21,6 +21,7 @@ import ShuffleModal from '@/components/ShuffleModal';
 import MonthSummaryBar from '@/components/MonthSummaryBar';
 import SettingsModal from '@/components/SettingsModal';
 import MyRequestsModal from '@/components/MyRequestsModal';
+import BroadcastEmailModal from '@/components/BroadcastEmailModal';
 import { performSmartShuffle } from '@/utils/shuffleUtils';
 
 export default function Home() {
@@ -39,6 +40,7 @@ export default function Home() {
     const [selectedProfile, setSelectedProfile] = useState(null);
     const [requestTarget, setRequestTarget] = useState(null); // { employee, date, currentShift }
     const [comboTarget, setComboTarget] = useState(null); // { employee, date, shift }
+    const [showBroadcast, setShowBroadcast] = useState(false);
 
     // Selection & Bulk Edit
     const [selectedCells, setSelectedCells] = useState(new Set()); // Set of "empId|dateStr"
@@ -340,6 +342,9 @@ export default function Home() {
 
                             {['manager', 'super-admin'].includes(user?.role) && (
                                 <div className="settings-controls">
+                                    <button className="btn btn-primary" onClick={() => setShowBroadcast(true)} style={{ background: 'var(--brand-red)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', fontWeight: 'bold' }}>
+                                        📢 Send Announcement
+                                    </button>
                                     <button className="btn btn-primary" onClick={publishSchedule} disabled={loading} style={{ background: 'var(--brand-red)', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', fontWeight: 'bold' }}>
                                         {loading ? 'Publishing...' : '📢 Publish Schedule'}
                                     </button>
@@ -455,6 +460,7 @@ export default function Home() {
                 {comboTarget && <ComboReasonModal employee={comboTarget.employee} dateStr={comboTarget.date} shift={comboTarget.shift} onClose={() => setComboTarget(null)} onSubmit={refetchEmployees} />}
                 {showShuffle && <ShuffleModal employees={employees} onClose={() => setShowShuffle(false)} onShuffle={handleShuffle} />}
                 {showMyRequests && <MyRequestsModal onClose={() => setShowMyRequests(false)} />}
+                {showBroadcast && <BroadcastEmailModal employees={employees} onClose={() => setShowBroadcast(false)} onSend={() => setShowBroadcast(false)} />}
             </div>
         </AuthGuard>
     );

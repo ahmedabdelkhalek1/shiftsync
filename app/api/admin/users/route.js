@@ -1,6 +1,8 @@
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { getSession } from '@/lib/auth';
+import { sendEmail } from '@/lib/gmail';
+import { welcomeEmailTemplate } from '@/lib/emailTemplates';
 
 // GET all users (super-admin only) 
 export async function GET() {
@@ -41,6 +43,20 @@ export async function POST(req) {
 
         const passwordHash = await User.hashPassword(password);
         const user = await User.create({ username: username.toLowerCase().trim(), email: email || '', passwordHash, role: targetRole, createdBy: session.userId });
+
+        // Send welcome email if an email was provided
+        if (email && email.includes('@')) {
+            const html = welcomeEmailTemplate(username, username.toLowerCase().trim(), password);
+            try {
+                await sendEmail(
+                    email,
+                    'Welcome to ShiftSync — Your Account is Ready 🎉',
+                    html
+                );
+            } catch (err) {
+                console.error('[EMAIL] Admin welcome email failed:', err);
+            }
+        }
 
         return Response.json({ success: true, user: { _id: user._id.toString(), username: user.username, role: user.role } });
     } catch (err) {

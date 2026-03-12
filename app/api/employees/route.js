@@ -93,11 +93,15 @@ export async function POST(req) {
         // ── FEATURE 2: Send welcome email ────────────────────────
         if (email && email.includes('@')) {
             const html = welcomeEmailTemplate(name, username.toLowerCase().trim(), password);
-            sendEmail(
-                email,
-                'Welcome to ShiftSync — Your Account is Ready 🎉',
-                html
-            ).catch(err => console.error('[EMAIL] Welcome email failed:', err));
+            try {
+                await sendEmail(
+                    email,
+                    'Welcome to ShiftSync — Your Account is Ready 🎉',
+                    html
+                );
+            } catch (err) {
+                console.error('[EMAIL] Welcome email failed:', err);
+            }
         }
 
         return Response.json({

@@ -79,8 +79,11 @@ export async function PATCH(req, { params }) {
                 ? '✅ Your Schedule Change Was Approved'
                 : '❌ Your Schedule Change Was Not Approved';
 
-            sendEmail(empUser.email, subject, html)
-                .catch(err => console.error('[EMAIL] Request decision email failed:', err));
+            try {
+                await sendEmail(empUser.email, subject, html);
+            } catch (err) {
+                console.error('[EMAIL] Request decision email failed:', err);
+            }
         }
 
         return Response.json({ success: true, status });

@@ -90,11 +90,15 @@ export async function POST(req) {
         if (empUser?.email && empUser.email.includes('@')) {
             const managerName = await getManagerName(session.userId);
             const html = scheduleUpdatedTemplate(managerName);
-            sendEmail(
-                empUser.email,
-                '⚠️ Your Schedule Has Been Updated — Please Review',
-                html
-            ).catch(err => console.error('[EMAIL] Schedule update notification failed:', err));
+            try {
+                await sendEmail(
+                    empUser.email,
+                    '⚠️ Your Schedule Has Been Updated — Please Review',
+                    html
+                );
+            } catch (err) {
+                console.error('[EMAIL] Schedule update notification failed:', err);
+            }
         }
 
         return Response.json({ success: true });
@@ -171,11 +175,15 @@ export async function PATCH(req) {
         // ── FEATURE 3: If this is a publish action, email all employees ──
         if (publish && month && year) {
             const managerName = await getManagerName(session.userId);
-            notifyAllEmployees(
-                session.userId,
-                `📅 New Schedule Published — ${month} ${year}`,
-                () => schedulePublishedTemplate(managerName, month, year)
-            ).catch(err => console.error('[EMAIL] Schedule published notification failed:', err));
+            try {
+                await notifyAllEmployees(
+                    session.userId,
+                    `📅 New Schedule Published — ${month} ${year}`,
+                    () => schedulePublishedTemplate(managerName, month, year)
+                );
+            } catch (err) {
+                console.error('[EMAIL] Schedule published notification failed:', err);
+            }
         }
 
         return Response.json({ success: true });

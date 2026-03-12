@@ -68,11 +68,15 @@ export async function POST(req) {
                     requestedShift,
                     reason || ''
                 );
-                sendEmail(
-                    managerUser.email,
-                    `🔄 New Schedule Change Request from ${emp.name}`,
-                    html
-                ).catch(err => console.error('[EMAIL] Change request to manager failed:', err));
+                try {
+                    await sendEmail(
+                        managerUser.email,
+                        `🔄 New Schedule Change Request from ${emp.name}`,
+                        html
+                    );
+                } catch (err) {
+                    console.error('[EMAIL] Change request to manager failed:', err);
+                }
             }
         }
 
