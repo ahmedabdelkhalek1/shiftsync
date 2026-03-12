@@ -57,25 +57,35 @@ export async function POST(req) {
             reason: reason || '',
         });
 
-        // ── FEATURE 4A: Notify the employee's manager ────────────
+        // ── FEATURE 4A: Notify the employee's manager (all emails) ────────────
         if (emp.createdBy) {
-            const managerUser = await User.findById(emp.createdBy).select('email').lean();
-            if (managerUser?.email && managerUser.email.includes('@')) {
-                const html = changeRequestToManagerTemplate(
-                    emp.name,
-                    date,
-                    currentShift,
-                    requestedShift,
-                    reason || ''
-                );
-                try {
-                    await sendEmail(
-                        managerUser.email,
-                        `🔄 New Schedule Change Request from ${emp.name}`,
-                        html
+            const managerUser = await User.findById(emp.createdBy).select('email emails').lean();
+            if (managerUser) {
+                // Combine primary + extra emails
+                const allEmails = [];
+                if (managerUser.email && managerUser.email.includes('@')) allEmails.push(managerUser.email);
+                if (managerUser.emails?.length) {
+                    for (const e of managerUser.emails) {
+                        if (e && e.includes('@') && !allEmails.includes(e)) allEmails.push(e);
+                    }
+                }
+
+                if (allEmails.length > 0) {
+                    const html = changeRequestToManagerTemplate(
+                        emp.name,
+                        date,
+                        currentShift,
+                        requestedShift,
+                        reason || ''
                     );
-                } catch (err) {
-                    console.error('[EMAIL] Change request to manager failed:', err);
+                    const sends = allEmails.map(addr =>
+                        sendEmail(addr, `🔄 New Schedule Change Request from ${emp.name}`, html)
+                    );
+                    try {
+                        await Promise.allSettled(sends);
+                    } catch (err) {
+                        console.error('[EMAIL] Change request to manager failed:', err);
+                    }
                 }
             }
         }

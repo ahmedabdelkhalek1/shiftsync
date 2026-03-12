@@ -8,6 +8,8 @@ export default function Navbar({
     onAddEmployee,
     onShowApprovals,
     onShowMyRequests,
+    onShowManageEmails,
+    onShowRequestLog,
     onSave,
     pendingCount = 0
 }) {
@@ -46,6 +48,8 @@ export default function Navbar({
                             >
                                 📬 Inbox <span style={{ marginLeft: '4px', fontWeight: 'bold' }}>{pendingCount}</span>
                             </button>
+                            <button onClick={onShowRequestLog} className="btn btn-secondary" style={{ marginRight: '8px' }}>📋 Request Log</button>
+                            <button onClick={onShowManageEmails} className="btn btn-secondary" style={{ marginRight: '8px' }}>✉️ Emails</button>
                             <button onClick={onAddEmployee} className="btn btn-primary">＋ Add Employee</button>
                         </>
                     ) : (

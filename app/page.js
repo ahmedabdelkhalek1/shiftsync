@@ -22,6 +22,8 @@ import MonthSummaryBar from '@/components/MonthSummaryBar';
 import SettingsModal from '@/components/SettingsModal';
 import MyRequestsModal from '@/components/MyRequestsModal';
 import BroadcastEmailModal from '@/components/BroadcastEmailModal';
+import ManageEmailsModal from '@/components/ManageEmailsModal';
+import ManagerRequestLog from '@/components/ManagerRequestLog';
 import { performSmartShuffle } from '@/utils/shuffleUtils';
 
 export default function Home() {
@@ -41,6 +43,8 @@ export default function Home() {
     const [requestTarget, setRequestTarget] = useState(null); // { employee, date, currentShift }
     const [comboTarget, setComboTarget] = useState(null); // { employee, date, shift }
     const [showBroadcast, setShowBroadcast] = useState(false);
+    const [showManageEmails, setShowManageEmails] = useState(false);
+    const [showRequestLog, setShowRequestLog] = useState(false);
 
     // Selection & Bulk Edit
     const [selectedCells, setSelectedCells] = useState(new Set()); // Set of "empId|dateStr"
@@ -328,6 +332,8 @@ export default function Home() {
                     onAddEmployee={() => setShowAddEmployee(true)}
                     onShowApprovals={() => setShowApprovals(true)}
                     onShowMyRequests={() => setShowMyRequests(true)}
+                    onShowManageEmails={() => setShowManageEmails(true)}
+                    onShowRequestLog={() => setShowRequestLog(true)}
                     pendingCount={pendingCount}
                 />
 
@@ -461,6 +467,8 @@ export default function Home() {
                 {showShuffle && <ShuffleModal employees={employees} onClose={() => setShowShuffle(false)} onShuffle={handleShuffle} />}
                 {showMyRequests && <MyRequestsModal onClose={() => setShowMyRequests(false)} />}
                 {showBroadcast && <BroadcastEmailModal employees={employees} onClose={() => setShowBroadcast(false)} onSend={() => setShowBroadcast(false)} />}
+                {showManageEmails && <ManageEmailsModal onClose={() => setShowManageEmails(false)} />}
+                {showRequestLog && <ManagerRequestLog currentDate={currentDate} onClose={() => setShowRequestLog(false)} />}
             </div>
         </AuthGuard>
     );

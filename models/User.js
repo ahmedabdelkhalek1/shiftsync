@@ -5,6 +5,7 @@ import crypto from 'crypto';
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true, lowercase: true, trim: true },
     email: { type: String, default: '', lowercase: true, trim: true },
+    emails: [{ type: String, lowercase: true, trim: true }],
     passwordHash: { type: String, required: true },
     role: { type: String, enum: ['super-admin', 'manager', 'employee'], required: true },
     employeeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', default: null },
