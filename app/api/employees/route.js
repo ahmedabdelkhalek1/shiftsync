@@ -27,9 +27,20 @@ export async function GET() {
             }
         }
 
+        // Fetch emails from the User collection for all these employees
+        const employeeIds = employees.map(e => e._id);
+        const users = await User.find({ employeeId: { $in: employeeIds } }).select('employeeId email').lean();
+        
+        // Map employeeId -> email for quick lookup
+        const emailMap = {};
+        users.forEach(u => {
+            if (u.employeeId) emailMap[u.employeeId.toString()] = u.email || '';
+        });
+
         const serialized = employees.map(emp => ({
             ...emp,
             _id: emp._id.toString(),
+            email: emailMap[emp._id.toString()] || '',
             schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
             wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {},
         }));
