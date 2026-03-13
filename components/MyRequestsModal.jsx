@@ -83,6 +83,12 @@ export default function MyRequestsModal({ onClose }) {
                                         {req.reason && (
                                             <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', fontStyle: 'italic' }}>"{req.reason}"</div>
                                         )}
+                                        {req.managerComment && (
+                                            <div style={{ marginTop: '8px', padding: '6px 10px', background: 'rgba(0,0,0,0.15)', borderRadius: '4px', borderLeft: '3px solid ' + s.color }}>
+                                                <div style={{ fontSize: '11px', color: s.color, fontWeight: 700, textTransform: 'uppercase', marginBottom: '2px' }}>Manager Comment</div>
+                                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>"{req.managerComment}"</div>
+                                            </div>
+                                        )}
                                     </div>
                                     <span style={{ background: s.bg, color: s.color, padding: '4px 12px', borderRadius: 'var(--radius-pill)', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>
                                         {s.label}

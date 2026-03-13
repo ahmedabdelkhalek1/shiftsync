@@ -105,6 +105,12 @@ export default function ManagerRequestLog({ currentDate, onClose }) {
                                                 &quot;{req.reason}&quot;
                                             </div>
                                         )}
+                                        {req.managerComment && (
+                                            <div style={{ marginTop: '8px', padding: '6px 10px', background: 'rgba(0,0,0,0.15)', borderRadius: '4px', borderLeft: '3px solid ' + s.color }}>
+                                                <div style={{ fontSize: '11px', color: s.color, fontWeight: 700, textTransform: 'uppercase', marginBottom: '2px' }}>Manager Comment</div>
+                                                <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>&quot;{req.managerComment}&quot;</div>
+                                            </div>
+                                        )}
                                     </div>
                                     <span style={{
                                         background: s.bg, color: s.color, padding: '4px 12px',

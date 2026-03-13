@@ -8,6 +8,7 @@ export default function ApprovalsInbox({ onClose, onUpdate }) {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [comments, setComments] = useState({});
 
     // Fetch pending requests on mount
     useEffect(() => {
@@ -32,7 +33,7 @@ export default function ApprovalsInbox({ onClose, onUpdate }) {
             const res = await fetch(`/api/requests/${id}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ status })
+                body: JSON.stringify({ status, managerComment: comments[id] || '' })
             });
             if (res.ok) {
                 setRequests(prev => prev.filter(r => r._id !== id));
@@ -82,6 +83,17 @@ export default function ApprovalsInbox({ onClose, onUpdate }) {
                                         "{req.reason}"
                                     </div>
                                 )}
+
+                                <div style={{ marginBottom: '16px' }}>
+                                    <textarea
+                                        className="input-field"
+                                        placeholder="Add an optional comment (e.g. why it was approved/rejected)..."
+                                        rows={2}
+                                        value={comments[req._id] || ''}
+                                        onChange={(e) => setComments(prev => ({ ...prev, [req._id]: e.target.value }))}
+                                        style={{ fontSize: '13px', resize: 'vertical' }}
+                                    />
+                                </div>
 
                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', paddingTop: '12px', borderTop: '1px solid var(--border-subtle)' }}>
                                     <button onClick={() => handleAction(req._id, 'rejected')} className="btn btn-secondary btn-sm" style={{ color: 'var(--brand-red-light)' }}>✖ Reject</button>

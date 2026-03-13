@@ -8,6 +8,7 @@ const ShiftRequestSchema = new mongoose.Schema({
     requestedShift: { type: String, required: true },
     workingShift: { type: String, default: null }, // for combo-in
     reason: { type: String, default: '' },
+    managerComment: { type: String, default: '' },
     status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
     reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     reviewedAt: { type: Date, default: null },

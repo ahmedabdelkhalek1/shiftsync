@@ -15,7 +15,7 @@ export async function PATCH(req, { params }) {
 
         await connectDB();
         const { id } = await params;
-        const { status } = await req.json();
+        const { status, managerComment } = await req.json();
 
         if (!['approved', 'rejected'].includes(status)) {
             return Response.json({ error: 'Invalid status' }, { status: 400 });
@@ -26,6 +26,7 @@ export async function PATCH(req, { params }) {
         if (request.status !== 'pending') return Response.json({ error: 'Request already processed' }, { status: 400 });
 
         request.status = status;
+        request.managerComment = managerComment || '';
         request.reviewedBy = session.userId;
         request.reviewedAt = new Date();
         await request.save();
@@ -72,8 +73,8 @@ export async function PATCH(req, { params }) {
                 : request.requestedShift;
 
             const html = status === 'approved'
-                ? changeRequestApprovedTemplate(request.employeeName, request.date, displayShift)
-                : changeRequestRejectedTemplate(request.employeeName);
+                ? changeRequestApprovedTemplate(request.employeeName, request.date, displayShift, request.managerComment)
+                : changeRequestRejectedTemplate(request.employeeName, request.date, displayShift, request.managerComment);
 
             const subject = status === 'approved'
                 ? '✅ Your Schedule Change Was Approved'
