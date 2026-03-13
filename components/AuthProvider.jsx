@@ -35,6 +35,31 @@ export function AuthProvider({ children }) {
         refetch();
     }, [pathname]);
 
+    useEffect(() => {
+        let timeoutId;
+        const INACTIVITY_LIMIT = 15 * 60 * 1000; // 15 minutes
+
+        const handleActivity = () => {
+            clearTimeout(timeoutId);
+            if (user) {
+                timeoutId = setTimeout(() => {
+                    logout();
+                }, INACTIVITY_LIMIT);
+            }
+        };
+
+        if (user) {
+            const events = ['mousemove', 'keydown', 'mousedown', 'scroll', 'touchstart'];
+            events.forEach(event => window.addEventListener(event, handleActivity));
+            handleActivity(); // Start initial timer
+
+            return () => {
+                clearTimeout(timeoutId);
+                events.forEach(event => window.removeEventListener(event, handleActivity));
+            };
+        }
+    }, [user, pathname]);
+
     const login = async (username, password) => {
         const res = await fetch('/api/auth/login', {
             method: 'POST',
@@ -45,9 +70,9 @@ export function AuthProvider({ children }) {
         if (res.ok) {
             await refetch();
             if (data.user.role === 'super-admin') {
-                router.push('/admin');
+                router.replace('/admin');
             } else {
-                router.push('/');
+                router.replace('/');
             }
             return { success: true };
         }
@@ -57,7 +82,7 @@ export function AuthProvider({ children }) {
     const logout = async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
         setUser(null);
-        router.push('/login');
+        router.replace('/login');
     };
 
     return (
