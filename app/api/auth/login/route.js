@@ -1,9 +1,21 @@
 import { connectDB } from '@/lib/db';
 import { User } from '@/models/User';
 import { signToken } from '@/lib/auth';
+import { rateLimit, getClientIp } from '@/lib/rateLimit';
 
 export async function POST(req) {
     try {
+        // ── Rate Limiting ──────────────────────────────────────────────────────
+        const ip = getClientIp(req);
+        const { success, remaining, resetIn } = rateLimit(`login:${ip}`, { limit: 5, window: 60_000 });
+        if (!success) {
+            const seconds = Math.ceil(resetIn / 1000);
+            return Response.json(
+                { error: `Too many login attempts. Please wait ${seconds} seconds and try again.` },
+                { status: 429, headers: { 'Retry-After': String(seconds) } }
+            );
+        }
+
         await connectDB();
         const { username, password } = await req.json();
 

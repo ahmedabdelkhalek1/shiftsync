@@ -43,9 +43,9 @@ export async function POST(req) {
         const emp = await Employee.findOne({ _id: session.employeeId, active: true });
         if (!emp) return Response.json({ error: 'Employee not found' }, { status: 404 });
 
-        // Check for duplicate pending request for same date
+        // Check for duplicate pending request for same date (rejected ones can be re-submitted)
         const existing = await ShiftRequest.findOne({ employeeId: session.employeeId, date, status: 'pending' });
-        if (existing) return Response.json({ error: 'You already have a pending request for this date' }, { status: 400 });
+        if (existing) return Response.json({ error: 'You already have a pending request for this date. Please wait for it to be reviewed before submitting another.' }, { status: 400 });
 
         const request = await ShiftRequest.create({
             employeeId: session.employeeId,

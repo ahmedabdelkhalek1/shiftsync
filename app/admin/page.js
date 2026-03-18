@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/components/AuthProvider';
+import { useToast } from '@/components/ToastProvider';
+import { useConfirm } from '@/components/ConfirmDialog';
 
 export default function SuperAdminPage() {
     const { user } = useAuth();
+    const toast = useToast();
+    const { confirm, ConfirmDialog } = useConfirm();
     const [users, setUsers] = useState([]);
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -47,16 +51,23 @@ export default function SuperAdminPage() {
             const data = await res.json();
             if (res.ok) {
                 setUsername(''); setPassword(''); setEmail(''); fetchUsers();
+                toast.success(`Manager "${username}" created successfully`);
             } else { setFormError(data.error); }
         } catch { setFormError('Network error'); }
     };
 
     const handleDeactivate = async (id) => {
-        if (!confirm('Are you sure you want to deactivate this manager?')) return;
+        const ok = await confirm('Deactivating this manager will prevent them from logging in. Continue?', {
+            title: 'Deactivate Manager', danger: true
+        });
+        if (!ok) return;
         try {
             await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
             fetchUsers();
-        } catch { }
+            toast.success('Manager deactivated');
+        } catch {
+            toast.error('Failed to deactivate manager');
+        }
     };
 
     if (!user || user.role !== 'super-admin') return null;
@@ -139,6 +150,7 @@ export default function SuperAdminPage() {
                     </div>
                 </div>
             </div>
+            <ConfirmDialog />
         </div>
     );
 }

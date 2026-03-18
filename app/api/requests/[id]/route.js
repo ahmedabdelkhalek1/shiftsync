@@ -65,27 +65,22 @@ export async function PATCH(req, { params }) {
             }
         }
 
-        // ── FEATURE 4B: Notify the employee of the decision ─────
-        const empUser = await User.findOne({ employeeId: request.employeeId }).select('email').lean();
-        if (empUser?.email && empUser.email.includes('@')) {
+        // ── FEATURE 4B: Notify the employee (fire-and-forget) ───────────────
+        User.findOne({ employeeId: request.employeeId }).select('email').lean().then(empUser => {
+            if (!empUser?.email?.includes('@')) return;
             const displayShift = request.requestedShift === 'combo-in'
                 ? (request.workingShift || 'morning')
                 : request.requestedShift;
-
             const html = status === 'approved'
                 ? changeRequestApprovedTemplate(request.employeeName, request.date, displayShift, request.managerComment)
                 : changeRequestRejectedTemplate(request.employeeName, request.date, displayShift, request.managerComment);
-
             const subject = status === 'approved'
                 ? '✅ Your Schedule Change Was Approved'
                 : '❌ Your Schedule Change Was Not Approved';
-
-            try {
-                await sendEmail(empUser.email, subject, html);
-            } catch (err) {
-                console.error('[EMAIL] Request decision email failed:', err);
-            }
-        }
+            sendEmail(empUser.email, subject, html).catch(err =>
+                console.error('[EMAIL] Request decision email failed:', err)
+            );
+        });
 
         return Response.json({ success: true, status });
     } catch (err) {

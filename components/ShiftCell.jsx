@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/components/AuthProvider';
+import { useState } from 'react';
 
 export const SHIFT_OPTIONS = [
     { value: 'morning', label: '🌅 Morning', shortLabel: 'Morning' },
@@ -18,34 +19,42 @@ export const SHIFT_OPTIONS = [
 
 export default function ShiftCell({ employee, dateStr, shift, wfh, onShiftChange, onShiftRequest }) {
     const { user } = useAuth();
+    const [isSaving, setIsSaving] = useState(false);
 
-    // Use props directly — NO local useState.
-    // This ensures the component always reflects the latest data from the API.
     const currentShift = shift || 'off-day';
     const currentWfh = wfh || false;
 
     const canEdit = user && ['manager', 'super-admin'].includes(user.role);
     const isSelf = user && user.employeeId === employee._id;
 
-    const handleSelectChange = (e) => {
-        e.stopPropagation(); // Prevent td click from firing
+    const handleSelectChange = async (e) => {
+        e.stopPropagation();
         const val = e.target.value;
         if (onShiftChange) {
-            onShiftChange(employee._id, dateStr, val, currentWfh);
+            setIsSaving(true);
+            try {
+                await onShiftChange(employee._id, dateStr, val, currentWfh);
+            } finally {
+                setIsSaving(false);
+            }
         }
     };
 
-    const handleWfhToggle = (e) => {
+    const handleWfhToggle = async (e) => {
         e.stopPropagation();
         e.preventDefault();
         const newWfh = !currentWfh;
         if (onShiftChange) {
-            onShiftChange(employee._id, dateStr, currentShift, newWfh);
+            setIsSaving(true);
+            try {
+                await onShiftChange(employee._id, dateStr, currentShift, newWfh);
+            } finally {
+                setIsSaving(false);
+            }
         }
     };
 
     const handleClick = (e) => {
-        // Only fire for employees requesting changes — managers use the td onclick for selection
         if (!canEdit && isSelf && onShiftRequest) {
             onShiftRequest(employee, dateStr, currentShift);
         }
@@ -57,17 +66,25 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, onShiftChange
         <div
             className="shift-grid-cell"
             onClick={handleClick}
-            style={{ cursor: canEdit || isSelf ? 'pointer' : 'default', width: '100%', height: '100%' }}
+            style={{ cursor: canEdit || isSelf ? 'pointer' : 'default', width: '100%', height: '100%', position: 'relative' }}
         >
+            {isSaving && (
+                <div style={{
+                    position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.35)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    zIndex: 5, borderRadius: '4px', fontSize: '10px', color: 'white',
+                    fontWeight: 700, letterSpacing: '0.5px'
+                }}>
+                    saving…
+                </div>
+            )}
             {canEdit ? (
                 <select
                     className={`shift-select ${currentShift}`}
                     value={currentShift}
-                    onChange={(e) => {
-                        e.stopPropagation();
-                        handleSelectChange(e);
-                    }}
-                    onClick={null} /* Allow bubble to td for selection */
+                    onChange={handleSelectChange}
+                    onClick={null}
+                    disabled={isSaving}
                 >
                     {SHIFT_OPTIONS.map(op => (
                         <option key={op.value} value={op.value}>{op.label}</option>
@@ -86,6 +103,7 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, onShiftChange
                         className={`wfh-toggle ${currentWfh ? 'active' : ''}`}
                         onClick={handleWfhToggle}
                         title="Toggle Work From Home"
+                        disabled={isSaving}
                     >
                         {currentWfh ? '🏠 WFH' : '🏠'}
                     </button>

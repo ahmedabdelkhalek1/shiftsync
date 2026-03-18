@@ -33,7 +33,8 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         refetch();
-    }, [pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Only on mount — login/logout call refetch() explicitly
 
     useEffect(() => {
         let timeoutId;

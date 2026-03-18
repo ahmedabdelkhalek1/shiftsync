@@ -5,6 +5,7 @@ import { ShiftRequest } from '@/models/ShiftRequest';
 import { getSession } from '@/lib/auth';
 import { sendEmail } from '@/lib/gmail';
 import { schedulePublishedTemplate, scheduleUpdatedTemplate } from '@/lib/emailTemplates';
+import { validateShift, validateDate, validateText, validateObjectId } from '@/lib/validate';
 
 // Helper: get name of a manager User by userId string
 async function getManagerName(managerId) {
@@ -31,21 +32,45 @@ async function notifyAllEmployees(managerId, subject, htmlFn) {
     await Promise.allSettled(sends);
 }
 
-// POST /api/shifts — set single shift (manager) → Feature 5: notify affected employee
+// POST /api/shifts — set single shift (manager only)
 export async function POST(req) {
     try {
         const session = await getSession();
         if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-
-        await connectDB();
-        const { employeeId, date, shift, wfh, reason } = await req.json();
-
         if (session.role === 'employee') {
             return Response.json({ error: 'Employees must submit a shift request' }, { status: 403 });
         }
 
-        const emp = await Employee.findOne({ _id: employeeId, active: true });
-        if (!emp) return Response.json({ error: 'Employee not found' }, { status: 404 });
+        await connectDB();
+        const { employeeId, date, shift, wfh, reason } = await req.json();
+
+        // ── Input Validation ───────────────────────────────────────────────────
+        const idCheck = validateObjectId(employeeId, 'employeeId');
+        if (!idCheck.valid) return Response.json({ error: idCheck.error }, { status: 400 });
+
+        const dateCheck = validateDate(date);
+        if (!dateCheck.valid) return Response.json({ error: dateCheck.error }, { status: 400 });
+
+        if (shift !== undefined) {
+            const shiftCheck = validateShift(shift);
+            if (!shiftCheck.valid) return Response.json({ error: shiftCheck.error }, { status: 400 });
+        }
+
+        if (reason !== undefined) {
+            const reasonCheck = validateText(reason, 'Reason', { maxLength: 300 });
+            if (!reasonCheck.valid) return Response.json({ error: reasonCheck.error }, { status: 400 });
+        }
+
+        // ── Manager Isolation ──────────────────────────────────────────────────
+        // Build query: managers can only modify employees they created
+        const ownershipFilter = session.role === 'manager'
+            ? { _id: employeeId, createdBy: session.userId, active: true }
+            : { _id: employeeId, active: true }; // super-admin can access all
+
+        const emp = await Employee.findOne(ownershipFilter);
+        if (!emp) {
+            return Response.json({ error: 'Employee not found or access denied' }, { status: 404 });
+        }
 
         const previousShift = emp.schedule.get(date) || 'off-day';
 
@@ -60,6 +85,13 @@ export async function POST(req) {
                 if (emp.balances.sick > 0) emp.balances.sick--;
             } else if (previousShift === 'sick-leave' && shift !== 'sick-leave') {
                 emp.balances.sick++;
+            }
+
+            // WFH balance deduction (Fix #16 from audit)
+            if (shift !== 'off-day' && wfh === true && !emp.wfhDays.get(date)) {
+                if (emp.balances.wfh > 0) emp.balances.wfh--;
+            } else if (emp.wfhDays.get(date) && (wfh === false || shift === 'off-day')) {
+                emp.balances.wfh++;
             }
 
             const isEarningCombo = (shift === 'combo-in' && previousShift !== 'combo-in') ||
@@ -85,20 +117,16 @@ export async function POST(req) {
         if (emp.reconcileBalances) emp.reconcileBalances();
         await emp.save();
 
-        // ── FEATURE 5: Notify employee that their schedule was updated ──
+        // ── Notify employee (fire-and-forget — don't block response) ──────────
         const empUser = await User.findOne({ employeeId: emp._id }).select('email').lean();
         if (empUser?.email && empUser.email.includes('@')) {
-            const managerName = await getManagerName(session.userId);
-            const html = scheduleUpdatedTemplate(managerName);
-            try {
-                await sendEmail(
+            getManagerName(session.userId).then(managerName => {
+                sendEmail(
                     empUser.email,
                     '⚠️ Your Schedule Has Been Updated — Please Review',
-                    html
-                );
-            } catch (err) {
-                console.error('[EMAIL] Schedule update notification failed:', err);
-            }
+                    scheduleUpdatedTemplate(managerName)
+                ).catch(err => console.error('[EMAIL] Schedule update notification failed:', err));
+            });
         }
 
         return Response.json({ success: true });
@@ -108,7 +136,7 @@ export async function POST(req) {
     }
 }
 
-// PATCH /api/shifts — bulk update (manager) → Feature 3: schedule published email
+// PATCH /api/shifts — bulk update (manager) → schedule published email
 export async function PATCH(req) {
     try {
         const session = await getSession();
@@ -117,20 +145,45 @@ export async function PATCH(req) {
         }
 
         await connectDB();
-        // publish flag + month/year are optional extras; updates is the main payload
         const { updates, publish, month, year } = await req.json();
 
-        // 1. Group updates by employee
+        if (!Array.isArray(updates)) {
+            return Response.json({ error: 'updates must be an array' }, { status: 400 });
+        }
+
+        // ── Input Validation on each update ───────────────────────────────────
+        for (const u of updates) {
+            const idCheck = validateObjectId(u.employeeId, 'employeeId');
+            if (!idCheck.valid) return Response.json({ error: idCheck.error }, { status: 400 });
+
+            const dateCheck = validateDate(u.dateStr);
+            if (!dateCheck.valid) return Response.json({ error: dateCheck.error }, { status: 400 });
+
+            if (u.shift !== undefined) {
+                const shiftCheck = validateShift(u.shift);
+                if (!shiftCheck.valid) return Response.json({ error: shiftCheck.error }, { status: 400 });
+            }
+        }
+
+        // 1. Group by employee
         const grouped = updates.reduce((acc, upd) => {
             if (!acc[upd.employeeId]) acc[upd.employeeId] = [];
             acc[upd.employeeId].push(upd);
             return acc;
         }, {});
 
-        // 2. Process each employee once
-        for (const [employeeId, empUpdates] of Object.entries(grouped)) {
-            const emp = await Employee.findOne({ _id: employeeId, active: true });
-            if (!emp) continue;
+        // ── Manager Isolation ──────────────────────────────────────────────────
+        // Batch-load employees the manager actually owns (single DB query)
+        const requestedIds = Object.keys(grouped);
+        const ownershipFilter = session.role === 'manager'
+            ? { _id: { $in: requestedIds }, createdBy: session.userId, active: true }
+            : { _id: { $in: requestedIds }, active: true };
+
+        const empList = await Employee.find(ownershipFilter);
+
+        // 2. Process each valid employee
+        for (const emp of empList) {
+            const empUpdates = grouped[emp._id.toString()] || [];
 
             for (const u of empUpdates) {
                 if (u.shift !== undefined) {
@@ -172,18 +225,21 @@ export async function PATCH(req) {
             await emp.save();
         }
 
-        // ── FEATURE 3: If this is a publish action, email all employees ──
+        // ── Publish: email all employees (fire-and-forget) ────────────────────
         if (publish && month && year) {
-            const managerName = await getManagerName(session.userId);
-            try {
-                await notifyAllEmployees(
+            const monthCheck = validateText(month, 'month', { required: true, maxLength: 20 });
+            const yearCheck = validateText(year, 'year', { required: true, maxLength: 4 });
+            if (!monthCheck.valid || !yearCheck.valid) {
+                return Response.json({ error: 'Invalid month or year' }, { status: 400 });
+            }
+
+            getManagerName(session.userId).then(managerName => {
+                notifyAllEmployees(
                     session.userId,
                     `📅 New Schedule Published — ${month} ${year}`,
                     () => schedulePublishedTemplate(managerName, month, year)
-                );
-            } catch (err) {
-                console.error('[EMAIL] Schedule published notification failed:', err);
-            }
+                ).catch(err => console.error('[EMAIL] Schedule published notification failed:', err));
+            });
         }
 
         return Response.json({ success: true });

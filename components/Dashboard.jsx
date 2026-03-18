@@ -53,11 +53,7 @@ export default function Dashboard({ employees, onOpenProfile, onRemoveEmployee }
                                     <td>
                                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                                             <button onClick={() => onOpenProfile(emp)} className="btn btn-secondary btn-sm" style={{ padding: '4px 12px' }}>Edit Profile</button>
-                                            <button onClick={() => {
-                                                if (confirm(`Remove ${emp.name}? This will deactivate their login.`)) {
-                                                    onRemoveEmployee(emp._id);
-                                                }
-                                            }} className="btn btn-danger" style={{ padding: '4px 12px' }}>Remove</button>
+                                            <button onClick={() => onRemoveEmployee(emp._id)} className="btn btn-danger" style={{ padding: '4px 12px' }}>Remove</button>
                                         </div>
                                     </td>
                                 )}
