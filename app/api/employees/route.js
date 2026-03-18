@@ -5,7 +5,7 @@ import { getSession } from '@/lib/auth';
 import { sendEmail } from '@/lib/gmail';
 import { welcomeEmailTemplate } from '@/lib/emailTemplates';
 
-export async function GET() {
+export async function GET(req) {
     try {
         const session = await getSession();
         if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
