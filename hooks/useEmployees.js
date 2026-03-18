@@ -6,10 +6,15 @@ export function useEmployees() {
     const [employees, setEmployees] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const fetchEmployees = async () => {
+    const fetchEmployees = async (start, end) => {
         try {
             setLoading(true);
-            const res = await fetch('/api/employees');
+            const query = new URLSearchParams();
+            if (start) query.append('start', start);
+            if (end) query.append('end', end);
+            const qs = query.toString() ? `?${query.toString()}` : '';
+            
+            const res = await fetch(`/api/employees${qs}`);
             if (res.ok) {
                 const data = await res.json();
                 setEmployees(data.employees || []);

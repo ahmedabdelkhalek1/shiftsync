@@ -37,12 +37,41 @@ export async function GET() {
             if (u.employeeId) emailMap[u.employeeId.toString()] = u.email || '';
         });
 
+        const url = new URL(req.url);
+        let start = url.searchParams.get('start');
+        let end = url.searchParams.get('end');
+
+        if (!start || !end) {
+            const now = new Date();
+            const startDate = new Date(now);
+            startDate.setMonth(now.getMonth() - 3);
+            start = startDate.toISOString().split('T')[0];
+
+            const endDate = new Date(now);
+            endDate.setMonth(now.getMonth() + 12);
+            end = endDate.toISOString().split('T')[0];
+        }
+
+        const filterMap = (mapObj) => {
+            if (!mapObj) return {};
+            const res = {};
+            for (const [key, val] of Object.entries(mapObj)) {
+                if (key >= start && key <= end) {
+                    res[key] = val;
+                }
+            }
+            return res;
+        };
+
         const serialized = employees.map(emp => ({
             ...emp,
             _id: emp._id.toString(),
             email: emailMap[emp._id.toString()] || '',
-            schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
-            wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {},
+            schedule: filterMap(emp.schedule),
+            wfhDays: filterMap(emp.wfhDays),
+            comboHistory: Array.isArray(emp.comboHistory)
+                ? emp.comboHistory.filter(h => h.date >= start && h.date <= end)
+                : [],
         }));
 
         return Response.json({ employees: serialized });
