@@ -7,6 +7,7 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
     const { user } = useAuth();
 
     // Local state initialized from employee data
+    const [localEmployee, setLocalEmployee] = useState(employee);
     const [favoriteOffDays, setFavoriteOffDays] = useState(employee.favoriteOffDays || []);
     const [balances, setBalances] = useState({
         combo: employee.balances?.combo || 0,
@@ -43,13 +44,14 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
         setLoading(true);
         setError('');
         try {
-            const res = await fetch(`/api/employees/${employee._id}/combo/${date}`, {
+            const res = await fetch(`/api/employees/${localEmployee._id}/combo/${date}`, {
                 method: 'DELETE',
             });
             const data = await res.json();
             if (res.ok) {
-                onUpdate(data.employee);
+                setLocalEmployee(data.employee); // Update UI immediately
                 setBalances(prev => ({ ...prev, combo: data.employee.balances?.combo || 0 }));
+                onUpdate(data.employee); // Sync with parent page
             } else {
                 setError(data.error);
             }
@@ -97,7 +99,7 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
     return (
         <div className="modal active">
             <div className="modal-content modal-large">
-                <h2>{employee.name}'s Profile</h2>
+                <h2>{localEmployee.name}'s Profile</h2>
                 {error && <div style={{ color: 'var(--brand-red)', background: 'rgba(230,0,0,0.1)', padding: '10px', borderRadius: '4px', marginBottom: '16px' }}>{error}</div>}
 
                 <div className="profile-section">
@@ -174,10 +176,10 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
                     )}
                 </div>
 
-                {employee.comboHistory && employee.comboHistory.length > 0 && (
+                {localEmployee.comboHistory && localEmployee.comboHistory.length > 0 && (
                     <div className="profile-section">
                         <h3>Combo Days History</h3>
-                        <p className="combo-summary">Total Earned: <strong>{employee.comboHistory.filter(h => h.type === 'combo-in' && h.status === 'approved').length}</strong></p>
+                        <p className="combo-summary">Total Earned: <strong>{localEmployee.comboHistory.filter(h => h.type === 'combo-in' && h.status === 'approved').length}</strong></p>
                         <div className="combo-history-container">
                             <table className="combo-history-table">
                                 <thead>
@@ -191,7 +193,7 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {employee.comboHistory.map((h, i) => (
+                                    {localEmployee.comboHistory.map((h, i) => (
                                         <tr key={i}>
                                             <td>{h.date}</td>
                                             <td>{h.type === 'combo-in' ? <span className="status-badge status-available">Earned</span> : <span className="status-badge status-taken">Used</span>}</td>

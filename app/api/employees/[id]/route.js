@@ -71,14 +71,46 @@ export async function PUT(req, { params }) {
         await emp.save();
         const updatedUser = await User.findOne({ employeeId: id }).select('email').lean();
         
+        // Return same filtered payload shape as GET /api/employees
+        const url = new URL(req.url);
+        let start = url.searchParams.get('start');
+        let end = url.searchParams.get('end');
+
+        if (!start || !end) {
+            const now = new Date();
+            const startDate = new Date(now);
+            startDate.setMonth(now.getMonth() - 3);
+            start = startDate.toISOString().split('T')[0];
+
+            const endDate = new Date(now);
+            endDate.setMonth(now.getMonth() + 12);
+            end = endDate.toISOString().split('T')[0];
+        }
+
+        const filterMap = (mapObj) => {
+            if (!mapObj) return {};
+            const res = {};
+            // For Mongoose Maps, we need to iterate differently or convert first
+            const entries = typeof mapObj.entries === 'function' ? mapObj.entries() : Object.entries(mapObj);
+            for (const [key, val] of entries) {
+                if (key >= start && key <= end) {
+                    res[key] = val;
+                }
+            }
+            return res;
+        };
+
         return Response.json({
             success: true,
             employee: {
                 ...emp.toObject(),
                 _id: emp._id.toString(),
                 email: updatedUser?.email || '',
-                schedule: emp.schedule ? Object.fromEntries(Object.entries(emp.schedule)) : {},
-                wfhDays: emp.wfhDays ? Object.fromEntries(Object.entries(emp.wfhDays)) : {}
+                schedule: filterMap(emp.schedule),
+                wfhDays: filterMap(emp.wfhDays),
+                comboHistory: Array.isArray(emp.comboHistory)
+                    ? emp.comboHistory.filter(h => h.date >= start && h.date <= end)
+                    : [],
             }
         });
     } catch (err) {
