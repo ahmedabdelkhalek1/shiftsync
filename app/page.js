@@ -26,6 +26,7 @@ import MyRequestsModal from '@/components/MyRequestsModal';
 import BroadcastEmailModal from '@/components/BroadcastEmailModal';
 import ManageEmailsModal from '@/components/ManageEmailsModal';
 import ManagerRequestLog from '@/components/ManagerRequestLog';
+import BulkComboReasonModal from '@/components/BulkComboReasonModal';
 import { performSmartShuffle } from '@/utils/shuffleUtils';
 
 export default function Home() {
@@ -54,6 +55,7 @@ export default function Home() {
     // Selection & Bulk Edit
     const [selectedCells, setSelectedCells] = useState(new Set()); // Set of "empId|dateStr"
     const [bulkShiftSelect, setBulkShiftSelect] = useState('');
+    const [bulkComboTarget, setBulkComboTarget] = useState(false);
 
     // Warnings & Settings
     const [showWarnings, setShowWarnings] = useState(false);
@@ -225,18 +227,29 @@ export default function Home() {
         });
     };
 
-    const applyBulkEdit = async () => {
+    const applyBulkEdit = async (reason = '', workingShift = '') => {
         if (!bulkShiftSelect || selectedCells.size === 0) return;
+
+        // Prompt for reason if selecting combo-in bulk apply
+        if (bulkShiftSelect === 'combo-in' && !reason) {
+            setBulkComboTarget(true);
+            return;
+        }
 
         const updates = Array.from(selectedCells).map(key => {
             const [employeeId, dateStr] = key.split('|');
             const isWfhToggle = bulkShiftSelect === 'wfh-toggle';
             return {
                 employeeId, dateStr: dateStr,
-                ...(isWfhToggle ? { wfh: true } : { shift: bulkShiftSelect })
+                ...(isWfhToggle ? { wfh: true } : {
+                    shift: bulkShiftSelect === 'combo-in' ? workingShift : bulkShiftSelect,
+                    isComboIn: bulkShiftSelect === 'combo-in',
+                    reason: reason || undefined
+                })
             };
         });
 
+        setLoading(true);
         try {
             const res = await fetch('/api/shifts', {
                 method: 'PATCH',
@@ -611,6 +624,7 @@ export default function Home() {
                 {showBroadcast && <BroadcastEmailModal employees={employees} onClose={() => setShowBroadcast(false)} onSend={() => setShowBroadcast(false)} />}
                 {showManageEmails && <ManageEmailsModal onClose={() => setShowManageEmails(false)} />}
                 {showRequestLog && <ManagerRequestLog currentDate={currentDate} onClose={() => setShowRequestLog(false)} />}
+                {bulkComboTarget && <BulkComboReasonModal count={selectedCells.size} onClose={() => setBulkComboTarget(false)} onSubmit={(reason, workingShift) => { setBulkComboTarget(false); applyBulkEdit(reason, workingShift); }} />}
                 <ConfirmDialog />
             </div>
         </AuthGuard>

@@ -207,19 +207,27 @@ export async function PATCH(req) {
                         emp.balances.sick++;
                     }
 
-                    const isEarningCombo = (u.shift === 'combo-in' && prev !== 'combo-in') ||
+                    const wasComboIn = emp.comboHistory.some(h => h.date === u.dateStr && h.type === 'combo-in');
+                    const isEarningCombo = u.isComboIn || (u.shift === 'combo-in' && prev !== 'combo-in') ||
                         (prev === 'vacation' && ['morning', 'afternoon', 'evening', 'night'].includes(u.shift));
 
-                    if (isEarningCombo) {
+                    if (isEarningCombo && !wasComboIn) {
                         emp.comboHistory.push({
                             date: u.dateStr, originalShift: prev, newShift: u.shift,
-                            reason: 'Bulk Update', type: 'combo-in', status: 'approved'
+                            reason: u.reason || 'Bulk Update', type: 'combo-in', status: 'approved'
                         });
-                    } else if (u.shift === 'combo-out' && prev !== 'combo-out') {
+                    } else if (!isEarningCombo && wasComboIn) {
+                        emp.comboHistory = emp.comboHistory.filter(h => !(h.date === u.dateStr && h.type === 'combo-in'));
+                    }
+
+                    const wasComboOut = emp.comboHistory.some(h => h.date === u.dateStr && h.type === 'combo-out');
+                    if (u.shift === 'combo-out' && !wasComboOut) {
                         emp.comboHistory.push({
                             date: u.dateStr, originalShift: prev, newShift: u.shift,
-                            reason: 'Bulk Assigned Off Day', type: 'combo-out', status: 'approved'
+                            reason: u.reason || 'Bulk Assigned Off Day', type: 'combo-out', status: 'approved'
                         });
+                    } else if (u.shift !== 'combo-out' && wasComboOut) {
+                        emp.comboHistory = emp.comboHistory.filter(h => !(h.date === u.dateStr && h.type === 'combo-out'));
                     }
 
                     emp.schedule.set(u.dateStr, u.shift);
