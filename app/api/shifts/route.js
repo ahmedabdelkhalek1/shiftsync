@@ -42,7 +42,7 @@ export async function POST(req) {
         }
 
         await connectDB();
-        const { employeeId, date, shift, wfh, reason } = await req.json();
+        const { employeeId, date, shift, wfh, reason, isComboIn } = await req.json();
 
         // ── Input Validation ───────────────────────────────────────────────────
         const idCheck = validateObjectId(employeeId, 'employeeId');
@@ -94,19 +94,25 @@ export async function POST(req) {
                 emp.balances.wfh++;
             }
 
-            const isEarningCombo = (shift === 'combo-in' && previousShift !== 'combo-in') ||
-                (previousShift === 'vacation' && ['morning', 'afternoon', 'evening', 'night'].includes(shift));
+            const wasComboIn = emp.comboHistory.some(h => h.date === date && h.type === 'combo-in');
 
-            if (isEarningCombo) {
+            if (isComboIn && !wasComboIn) {
                 emp.comboHistory.push({
                     date, originalShift: previousShift, newShift: shift,
                     reason: reason || 'Manual Update', type: 'combo-in', status: 'approved'
                 });
-            } else if (shift === 'combo-out' && previousShift !== 'combo-out') {
+            } else if (!isComboIn && wasComboIn) {
+                // If the user changed the shift away from combo-in (e.g., to Off Day), remove the combo history
+                emp.comboHistory = emp.comboHistory.filter(h => !(h.date === date && h.type === 'combo-in'));
+            }
+
+            if (shift === 'combo-out' && previousShift !== 'combo-out') {
                 emp.comboHistory.push({
                     date, originalShift: previousShift, newShift: shift,
                     reason: reason || 'Assigned Off Day', type: 'combo-out', status: 'approved'
                 });
+            } else if (shift !== 'combo-out' && previousShift === 'combo-out') {
+                emp.comboHistory = emp.comboHistory.filter(h => !(h.date === date && h.type === 'combo-out'));
             }
 
             emp.schedule.set(date, shift);

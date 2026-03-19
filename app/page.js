@@ -382,7 +382,6 @@ export default function Home() {
                                 if (['manager', 'super-admin'].includes(user?.role)) {
                                     toggleCellSelection(emp._id, id);
                                 } else if (user?.employeeId === emp._id) {
-                                    // Employee: Request change
                                     setRequestTarget({ employee: emp, date: id, currentShift: shift });
                                 }
                             }}
@@ -392,6 +391,7 @@ export default function Home() {
                                 dateStr={id}
                                 shift={shift}
                                 wfh={wfh}
+                                isComboIn={emp.comboHistory?.some(h => h.date === id && h.type === 'combo-in')}
                                 onShiftChange={(employeeId, dateStr, shift, wfh) => handleShiftChange(employeeId, dateStr, shift, wfh)}
                                 onShiftRequest={(emp, dStr, cShift) => setRequestTarget({ employee: emp, date: dStr, currentShift: cShift })}
                             />

@@ -17,7 +17,7 @@ export const SHIFT_OPTIONS = [
     { value: 'sick-leave', label: '🏥 Sick', shortLabel: 'Sick' }
 ];
 
-export default function ShiftCell({ employee, dateStr, shift, wfh, onShiftChange, onShiftRequest }) {
+export default function ShiftCell({ employee, dateStr, shift, wfh, isComboIn, onShiftChange, onShiftRequest }) {
     const { user } = useAuth();
     const [isSaving, setIsSaving] = useState(false);
 
@@ -79,20 +79,24 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, onShiftChange
                 </div>
             )}
             {canEdit ? (
-                <select
-                    className={`shift-select ${currentShift}`}
-                    value={currentShift}
-                    onChange={handleSelectChange}
-                    onClick={null}
-                    disabled={isSaving}
-                >
-                    {SHIFT_OPTIONS.map(op => (
-                        <option key={op.value} value={op.value}>{op.label}</option>
-                    ))}
-                </select>
+                <div style={{ position: 'relative', width: '100%' }}>
+                    <select
+                        className={`shift-select ${currentShift}`}
+                        value={currentShift}
+                        onChange={handleSelectChange}
+                        onClick={(e) => e.stopPropagation()}
+                        disabled={isSaving}
+                    >
+                        {SHIFT_OPTIONS.map(op => (
+                            <option key={op.value} value={op.value}>{op.label}</option>
+                        ))}
+                    </select>
+                    {isComboIn && <span title="Combo In Day" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '12px' }}>📥</span>}
+                </div>
             ) : (
-                <div className={`shift-select ${currentShift}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className={`shift-select ${currentShift}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     {shiftLabel}
+                    {isComboIn && <span title="Combo In Day" style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px' }}>📥</span>}
                 </div>
             )}
 
