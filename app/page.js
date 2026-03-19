@@ -487,7 +487,7 @@ export default function Home() {
                                         selectedCount={selectedCells.size}
                                         selectedShift={bulkShiftSelect}
                                         onShiftChange={setBulkShiftSelect}
-                                        onApply={applyBulkEdit}
+                                        onApply={() => applyBulkEdit()}
                                         onClear={() => setSelectedCells(new Set())}
                                     />
                                     <div className="warning-settings">
