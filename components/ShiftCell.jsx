@@ -100,7 +100,6 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, isComboIn, on
                         style={{ width: '100%', height: '100%', padding: '0 4px', fontSize: '13px' }}
                         value={currentShift}
                         onChange={handleSelectChange}
-                        onClick={(e) => e.stopPropagation()}
                         disabled={isSaving}
                     >
                         {SHIFT_OPTIONS.map(op => (
