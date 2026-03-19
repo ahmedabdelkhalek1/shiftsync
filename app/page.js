@@ -31,7 +31,7 @@ import { performSmartShuffle } from '@/utils/shuffleUtils';
 
 export default function Home() {
     const { user } = useAuth();
-    const { employees, refetchEmployees } = useEmployees();
+    const { employees, setEmployees, refetchEmployees } = useEmployees();
     const toast = useToast();
     const { confirm, ConfirmDialog } = useConfirm();
 
