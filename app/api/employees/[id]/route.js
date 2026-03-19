@@ -70,7 +70,7 @@ export async function PUT(req, { params }) {
 
         await emp.save();
         const updatedUser = await User.findOne({ employeeId: id }).select('email').lean();
-        const plainEmp = emp.toObject();
+        const plainEmp = emp.toObject({ flattenMaps: true });
         
         // Return same filtered payload shape as GET /api/employees
         const url = new URL(req.url);
