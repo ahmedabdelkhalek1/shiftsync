@@ -1,4 +1,3 @@
-import { connectDB } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET() {

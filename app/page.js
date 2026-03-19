@@ -159,6 +159,18 @@ export default function Home() {
             ].slice(0, 20); // Keep last 20
         }
 
+        // Optimistic UI update
+        const rollbackEmployees = [...employees];
+        const updatedEmployees = employees.map(e => {
+            if (e._id !== employeeId) return e;
+            return {
+                ...e,
+                schedule: { ...e.schedule, [dateStr]: shift !== undefined ? shift : e.schedule?.[dateStr] },
+                wfhDays: { ...e.wfhDays, [dateStr]: wfh !== undefined ? wfh : e.wfhDays?.[dateStr] }
+            };
+        });
+        setEmployees(updatedEmployees);
+
         try {
             const res = await fetch('/api/shifts', {
                 method: 'POST',
@@ -168,12 +180,12 @@ export default function Home() {
             if (!res.ok) {
                 const data = await res.json().catch(() => ({}));
                 toast.error(data.error || 'Failed to save shift change');
-                // Pop undo stack since it didn't actually save
+                setEmployees(rollbackEmployees); // Rollback
                 undoStackRef.current = undoStackRef.current.slice(1);
             }
-            await refetchEmployees();
         } catch (e) {
             toast.error('Network error saving shift');
+            setEmployees(rollbackEmployees); // Rollback
             undoStackRef.current = undoStackRef.current.slice(1);
         }
     };
@@ -185,6 +197,19 @@ export default function Home() {
         }
         const last = undoStackRef.current[0];
         undoStackRef.current = undoStackRef.current.slice(1);
+
+        // Optimistic update for undo
+        const rollbackEmployees = [...employees];
+        const updatedEmployees = employees.map(e => {
+            if (e._id !== last.employeeId) return e;
+            return {
+                ...e,
+                schedule: { ...e.schedule, [last.dateStr]: last.shift },
+                wfhDays: { ...e.wfhDays, [last.dateStr]: last.wfh }
+            };
+        });
+        setEmployees(updatedEmployees);
+
         try {
             const res = await fetch('/api/shifts', {
                 method: 'POST',
@@ -192,15 +217,16 @@ export default function Home() {
                 body: JSON.stringify({ employeeId: last.employeeId, date: last.dateStr, shift: last.shift, wfh: last.wfh })
             });
             if (res.ok) {
-                await refetchEmployees();
                 toast.success('Shift change undone');
             } else {
                 toast.error('Undo failed');
+                setEmployees(rollbackEmployees); // Rollback
             }
         } catch {
             toast.error('Undo network error');
+            setEmployees(rollbackEmployees); // Rollback
         }
-    }, []);
+    }, [employees, setEmployees, toast]);
 
     // Ctrl+Z → undo
     useEffect(() => {
