@@ -70,6 +70,7 @@ export async function PUT(req, { params }) {
 
         await emp.save();
         const updatedUser = await User.findOne({ employeeId: id }).select('email').lean();
+        const plainEmp = emp.toObject();
         
         // Return same filtered payload shape as GET /api/employees
         const url = new URL(req.url);
@@ -90,9 +91,7 @@ export async function PUT(req, { params }) {
         const filterMap = (mapObj) => {
             if (!mapObj) return {};
             const res = {};
-            // For Mongoose Maps, we need to iterate differently or convert first
-            const entries = typeof mapObj.entries === 'function' ? mapObj.entries() : Object.entries(mapObj);
-            for (const [key, val] of entries) {
+            for (const [key, val] of Object.entries(mapObj)) {
                 if (key >= start && key <= end) {
                     res[key] = val;
                 }
@@ -103,13 +102,13 @@ export async function PUT(req, { params }) {
         return Response.json({
             success: true,
             employee: {
-                ...emp.toObject(),
-                _id: emp._id.toString(),
+                ...plainEmp,
+                _id: plainEmp._id.toString(),
                 email: updatedUser?.email || '',
-                schedule: filterMap(emp.schedule),
-                wfhDays: filterMap(emp.wfhDays),
-                comboHistory: Array.isArray(emp.comboHistory)
-                    ? emp.comboHistory.filter(h => h.date >= start && h.date <= end)
+                schedule: filterMap(plainEmp.schedule),
+                wfhDays: filterMap(plainEmp.wfhDays),
+                comboHistory: Array.isArray(plainEmp.comboHistory)
+                    ? plainEmp.comboHistory.filter(h => h.date >= start && h.date <= end)
                     : [],
             }
         });
