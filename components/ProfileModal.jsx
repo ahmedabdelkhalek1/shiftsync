@@ -38,6 +38,28 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
         }));
     };
 
+    const handleRemoveCombo = async (date) => {
+        if (!window.confirm('Are you sure you want to remove this combo day? This will revert the schedule for this day and update balances.')) return;
+        setLoading(true);
+        setError('');
+        try {
+            const res = await fetch(`/api/employees/${employee._id}/combo/${date}`, {
+                method: 'DELETE',
+            });
+            const data = await res.json();
+            if (res.ok) {
+                onUpdate(data.employee);
+                setBalances(prev => ({ ...prev, combo: data.employee.balances?.combo || 0 }));
+            } else {
+                setError(data.error);
+            }
+        } catch {
+            setError('Failed to remove combo day');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSave = async () => {
         setLoading(true);
         setError('');
@@ -163,8 +185,9 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
                                         <th>Date</th>
                                         <th>Type</th>
                                         <th>Original</th>
-                                        <th>New</th>
+                                        <th>Reason</th>
                                         <th>Status</th>
+                                        {canEditBalances && <th>Actions</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -173,8 +196,22 @@ export default function ProfileModal({ employee, onClose, onUpdate }) {
                                             <td>{h.date}</td>
                                             <td>{h.type === 'combo-in' ? <span className="status-badge status-available">Earned</span> : <span className="status-badge status-taken">Used</span>}</td>
                                             <td>{h.originalShift}</td>
-                                            <td>{h.newShift}</td>
+                                            <td>{h.reason || h.newShift}</td>
                                             <td>{h.status}</td>
+                                            {canEditBalances && (
+                                                <td>
+                                                    {h.type === 'combo-in' && (
+                                                        <button 
+                                                            onClick={() => handleRemoveCombo(h.date)} 
+                                                            className="btn btn-secondary" 
+                                                            style={{ padding: '2px 8px', fontSize: '11px', background: 'rgba(230,0,0,0.1)', color: 'var(--brand-red)', borderColor: 'rgba(230,0,0,0.3)' }}
+                                                            disabled={loading}
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            )}
                                         </tr>
                                     ))}
                                 </tbody>
