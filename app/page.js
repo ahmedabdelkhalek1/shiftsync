@@ -227,7 +227,10 @@ export default function Home() {
         });
     };
 
-    const applyBulkEdit = async (reason = '', workingShift = '') => {
+    const applyBulkEdit = async (reason = '') => {
+        // Enforce type
+        if (typeof reason !== 'string') reason = '';
+
         if (!bulkShiftSelect || selectedCells.size === 0) return;
 
         // Prompt for reason if selecting combo-in bulk apply
@@ -238,11 +241,14 @@ export default function Home() {
 
         const updates = Array.from(selectedCells).map(key => {
             const [employeeId, dateStr] = key.split('|');
+            const emp = employees.find(e => e._id === employeeId);
+            const currentShift = emp?.schedule?.[dateStr] || 'off-day';
             const isWfhToggle = bulkShiftSelect === 'wfh-toggle';
+            
             return {
                 employeeId, dateStr: dateStr,
                 ...(isWfhToggle ? { wfh: true } : {
-                    shift: bulkShiftSelect === 'combo-in' ? workingShift : bulkShiftSelect,
+                    shift: bulkShiftSelect === 'combo-in' ? currentShift : bulkShiftSelect,
                     isComboIn: bulkShiftSelect === 'combo-in',
                     reason: reason || undefined
                 })
@@ -624,7 +630,7 @@ export default function Home() {
                 {showBroadcast && <BroadcastEmailModal employees={employees} onClose={() => setShowBroadcast(false)} onSend={() => setShowBroadcast(false)} />}
                 {showManageEmails && <ManageEmailsModal onClose={() => setShowManageEmails(false)} />}
                 {showRequestLog && <ManagerRequestLog currentDate={currentDate} onClose={() => setShowRequestLog(false)} />}
-                {bulkComboTarget && <BulkComboReasonModal count={selectedCells.size} onClose={() => setBulkComboTarget(false)} onSubmit={(reason, workingShift) => { setBulkComboTarget(false); applyBulkEdit(reason, workingShift); }} />}
+                {bulkComboTarget && <BulkComboReasonModal count={selectedCells.size} onClose={() => setBulkComboTarget(false)} onSubmit={(reason) => { setBulkComboTarget(false); applyBulkEdit(reason); }} />}
                 <ConfirmDialog />
             </div>
         </AuthGuard>

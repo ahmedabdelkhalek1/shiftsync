@@ -4,35 +4,22 @@ import { useState } from 'react';
 
 export default function BulkComboReasonModal({ count, onClose, onSubmit }) {
     const [reason, setReason] = useState('');
-    const [workingShift, setWorkingShift] = useState('morning');
 
     const handleSubmit = () => {
         if (!reason.trim()) {
             alert('Please enter a reason');
             return;
         }
-        onSubmit(reason, workingShift);
+        onSubmit(reason);
     };
 
     return (
         <div className="modal active">
             <div className="modal-content" style={{ maxWidth: '400px' }}>
-                <h2>Bulk Combo Day</h2>
-                <p>Applying to <strong>{count}</strong> selected shift(s).</p>
-                
-                <div style={{ margin: '16px 0' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600 }}>Shift Worked:</label>
-                    <select 
-                        className="input-field" 
-                        value={workingShift} 
-                        onChange={(e) => setWorkingShift(e.target.value)}
-                    >
-                        <option value="morning">🌅 Morning</option>
-                        <option value="afternoon">☀️ Afternoon</option>
-                        <option value="evening">🌆 Evening</option>
-                        <option value="night">🌙 Night</option>
-                    </select>
-                </div>
+                <h2 style={{ marginBottom: '8px' }}>Bulk Combo Day</h2>
+                <p style={{ marginBottom: '20px', color: 'var(--text-secondary)' }}>
+                    Applying to <strong>{count}</strong> selected shift(s).
+                </p>
 
                 <div style={{ margin: '16px 0' }}>
                     <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 600 }}>Reason of taking this as a combo-in:</label>
