@@ -91,30 +91,38 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, isComboIn, on
                             <option key={op.value} value={op.value}>{op.label}</option>
                         ))}
                     </select>
-                    {isComboIn && <span title="Combo In Day" style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '12px' }}>📥</span>}
                 </div>
             ) : (
                 <div className={`shift-select ${currentShift}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
                     {shiftLabel}
-                    {isComboIn && <span title="Combo In Day" style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)', fontSize: '12px' }}>📥</span>}
                 </div>
             )}
 
-            {/* WFH Toggle */}
-            {canEdit ? (
-                ['morning', 'afternoon', 'evening', 'night'].includes(currentShift) && (
-                    <button
-                        className={`wfh-toggle ${currentWfh ? 'active' : ''}`}
-                        onClick={handleWfhToggle}
-                        title="Toggle Work From Home"
-                        disabled={isSaving}
-                    >
-                        {currentWfh ? '🏠 WFH' : '🏠'}
-                    </button>
-                )
-            ) : currentWfh && (
-                <div className="wfh-toggle active" style={{ cursor: 'default' }}>🏠 WFH</div>
-            )}
+            {/* Badges Container (Bottom Left) */}
+            <div style={{ position: 'absolute', bottom: '4px', left: '4px', display: 'flex', gap: '4px', zIndex: 2 }}>
+                {isComboIn && (
+                    <div className="wfh-toggle active" style={{ position: 'static', cursor: 'default', padding: '2px 6px' }}>
+                        📥 Combo In
+                    </div>
+                )}
+                
+                {/* WFH Toggle */}
+                {canEdit ? (
+                    ['morning', 'afternoon', 'evening', 'night'].includes(currentShift) && (
+                        <button
+                            className={`wfh-toggle ${currentWfh ? 'active' : ''}`}
+                            onClick={handleWfhToggle}
+                            title="Toggle Work From Home"
+                            disabled={isSaving}
+                            style={{ position: 'static' }}
+                        >
+                            {currentWfh ? '🏠 WFH' : '🏠'}
+                        </button>
+                    )
+                ) : currentWfh && (
+                    <div className="wfh-toggle active" style={{ cursor: 'default', position: 'static' }}>🏠 WFH</div>
+                )}
+            </div>
         </div>
     );
 }
