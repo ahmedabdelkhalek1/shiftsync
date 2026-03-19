@@ -14,7 +14,8 @@ export const SHIFT_OPTIONS = [
     { value: 'combo-out', label: '📤 Combo Out', shortLabel: 'Combo Out' },
     { value: 'vacation', label: '🏖️ Vacation', shortLabel: 'Vacation' },
     { value: 'annual-leave', label: '📅 Annual', shortLabel: 'Annual' },
-    { value: 'sick-leave', label: '🏥 Sick', shortLabel: 'Sick' }
+    { value: 'sick-leave', label: '🏥 Sick', shortLabel: 'Sick' },
+    { value: 'wfh-toggle', label: '🏠 Toggle WFH', shortLabel: 'Toggle WFH' }
 ];
 
 export default function ShiftCell({ employee, dateStr, shift, wfh, isComboIn, onShiftChange, onShiftRequest }) {
@@ -30,6 +31,19 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, isComboIn, on
     const handleSelectChange = async (e) => {
         e.stopPropagation();
         const val = e.target.value;
+        
+        if (val === 'wfh-toggle') {
+            if (onShiftChange) {
+                setIsSaving(true);
+                try {
+                    await onShiftChange(employee._id, dateStr, currentShift, !currentWfh);
+                } finally {
+                    setIsSaving(false);
+                }
+            }
+            return;
+        }
+
         if (onShiftChange) {
             setIsSaving(true);
             try {

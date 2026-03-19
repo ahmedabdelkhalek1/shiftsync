@@ -16,7 +16,6 @@ export default function BulkEditToolbar({ selectedCount, selectedShift, onShiftC
             >
                 <option value="">Change to...</option>
                 {SHIFT_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                <option value="wfh-toggle">🏠 Toggle WFH</option>
             </select>
             <button onClick={onApply} className="btn btn-primary btn-sm" disabled={!selectedShift}>Apply</button>
             <button onClick={onClear} className="btn btn-secondary btn-sm">Clear</button>

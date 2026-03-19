@@ -48,7 +48,7 @@ export async function PATCH(req, { params }) {
                     emp.schedule.set(request.date, 'vacation');
                     emp.balances.combo = emp.balances.combo - 1;
                     emp.comboHistory.push({ date: request.date, originalShift: prev, newShift: 'vacation', reason: request.reason, status: 'approved', type: 'combo-out' });
-                } else if (request.requestedShift === 'wfh') {
+                } else if (request.requestedShift === 'wfh-toggle') {
                     emp.wfhDays.set(request.date, true);
                     emp.balances.wfh = Math.max(0, (emp.balances.wfh || 0) - 1);
                 } else if (request.requestedShift === 'annual-leave') {

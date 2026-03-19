@@ -58,9 +58,6 @@ export default function RequestChangeModal({ employee, dateStr, currentShift, on
                         <label style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Requested Shift</label>
                         <select className="input-field" value={requestedShift} onChange={e => setRequestedShift(e.target.value)} disabled={loading}>
                             {SHIFT_OPTIONS.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
-                            <option value="combo-in">📥 Combo In (Earn Day)</option>
-                            <option value="combo-out">📤 Combo Out (Use Day)</option>
-                            <option value="wfh">🏠 Work From Home (WFH Toggle)</option>
                         </select>
                     </div>
 
