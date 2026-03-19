@@ -78,10 +78,12 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, isComboIn, on
                     saving…
                 </div>
             )}
+            
             {canEdit ? (
-                <div style={{ position: 'relative', width: '100%' }}>
+                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                     <select
                         className={`shift-select ${currentShift}`}
+                        style={{ width: '100%', height: '100%', padding: '0 4px', fontSize: '13px' }}
                         value={currentShift}
                         onChange={handleSelectChange}
                         onClick={(e) => e.stopPropagation()}
@@ -93,34 +95,35 @@ export default function ShiftCell({ employee, dateStr, shift, wfh, isComboIn, on
                     </select>
                 </div>
             ) : (
-                <div className={`shift-select ${currentShift}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                <div className={`shift-select ${currentShift}`} style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', fontSize: '13px' }}>
                     {shiftLabel}
                 </div>
             )}
 
-            {/* Badges Container (Bottom Left) */}
-            <div style={{ position: 'absolute', bottom: '4px', left: '4px', display: 'flex', gap: '4px', zIndex: 2 }}>
+            {/* Badges Container (Bottom Left, absolutely positioned so it overlays slightly without breaking layout) */}
+            <div style={{ position: 'absolute', bottom: '2px', left: '2px', display: 'flex', gap: '2px', zIndex: 2, pointerEvents: 'none' }}>
                 {isComboIn && (
-                    <div className="wfh-toggle active" style={{ position: 'static', cursor: 'default', padding: '2px 6px' }}>
-                        📥 Combo In
+                    <div style={{ background: 'rgba(0,0,0,0.5)', borderRadius: '4px', padding: '1px 3px', fontSize: '10px', color: '#fff' }}>
+                        📥 Combo
                     </div>
                 )}
                 
-                {/* WFH Toggle */}
-                {canEdit ? (
-                    ['morning', 'afternoon', 'evening', 'night'].includes(currentShift) && (
-                        <button
-                            className={`wfh-toggle ${currentWfh ? 'active' : ''}`}
-                            onClick={handleWfhToggle}
-                            title="Toggle Work From Home"
-                            disabled={isSaving}
-                            style={{ position: 'static' }}
-                        >
-                            {currentWfh ? '🏠 WFH' : '🏠'}
-                        </button>
-                    )
-                ) : currentWfh && (
-                    <div className="wfh-toggle active" style={{ cursor: 'default', position: 'static' }}>🏠 WFH</div>
+                {/* WFH Badge (Only show if active) */}
+                {currentWfh && (
+                    <div 
+                        onClick={canEdit ? (e) => { e.stopPropagation(); handleWfhToggle(e); } : undefined} 
+                        style={{ 
+                            pointerEvents: canEdit ? 'auto' : 'none', 
+                            cursor: canEdit ? 'pointer' : 'default', 
+                            background: 'rgba(0,0,0,0.5)', 
+                            borderRadius: '4px', 
+                            padding: '1px 3px', 
+                            fontSize: '10px', 
+                            color: '#fff' 
+                        }}
+                    >
+                        🏠 WFH
+                    </div>
                 )}
             </div>
         </div>
